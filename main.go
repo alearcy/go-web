@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	// "database/sql"
+	// _ "github.com/mattn/go-sqlite3"
 )
 
 // variabili della struct in maiuscolo per renderle esportabili
