@@ -7,6 +7,16 @@ import (
 	"time"
 )
 
+// User variabili della struct in maiuscolo per renderle esportabili
+type User struct {
+	ID 	  string
+	Name      string
+	Surname   string
+	Email     string
+	Password  []byte
+	Role      int
+}
+
 func signup(w http.ResponseWriter, r *http.Request) {
 	if !isLoggedIn(r) {
 		tpl.ExecuteTemplate(w, "signup.gohtml", nil)
@@ -14,7 +24,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
-		// TODO: controllare che le due passwords coincidano
+		// TODO: controllare che le due passwords coincidino
 		// TODO: controllare se l'utente esiste prima di continuare
 		password := r.FormValue("password")
 		cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
@@ -22,7 +32,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		u := user{email, cryptedPassword, "admin"}
+		u := User{"", "", "", email, cryptedPassword, 1}
 		uuid, _ := generateUUID()
 		generateCookie(w, uuid)
 

@@ -18,8 +18,8 @@ func generateUUID() (string, error) {
 
 func generateCookie(w http.ResponseWriter, uuid string) *http.Cookie {
 	c := &http.Cookie{
-		Name:  "session",
-		Value: uuid,
+		Name:     "session",
+		Value:    uuid,
 		HttpOnly: true,
 		// Secure: true solo HTTPS
 	}

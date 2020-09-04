@@ -5,7 +5,7 @@
     {{range .}}
     {{/* (questo è un commento): pipeline delle funzioni di trasformazione create e passate al template */}}
     {{/* si possono usare anche i metodi di una struttura semplicemente con | .Metodo */}}
-    <li>{{. | uppercase | firstThree}}</li>
+    <li>{{uppercase .}}</li>
     {{end}}
 
   </ul>

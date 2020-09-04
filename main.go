@@ -1,63 +1,35 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
+	_ "github.com/lib/pq"
 	"html/template"
 	"log"
 	"net/http"
-	"strings"
 	"time"
-	// "database/sql"
-	// _ "github.com/mattn/go-sqlite3"
 )
 
-// variabili della struct in maiuscolo per renderle esportabili
-type user struct {
-	Email    string
-	Password []byte
-	Role     string
-}
-
 type session struct {
-	uID string
+	uID          string
 	activityTime time.Time
 }
 
 // simulo due DB, uno di sessione e uno degli utenti
-var dbUsers = map[string]user{}      // user ID, user
+var dbUsers = map[string]User{}       // user ID, user
 var dbSessions = map[string]session{} // session ID, user ID
 var dbSessionsCleaned time.Time
 
-// per passare funzioni al template creo una variabile di tipo FuncMap che accetta una chiave stringa e una funzione qualsiasi
-var fn = template.FuncMap{
-	"uppercase":  strings.ToUpper,
-	"firstThree": firstThree,
-}
-
 const sessionLength int = 30
 
-func firstThree(s string) string {
-	s = strings.TrimSpace(s)
-	s = s[:3]
-	return s
-}
-
 var tpl *template.Template
-
-// funzione di inizializzazione
-func init() {
-	// template.Must si occupa lui di fare l'error checking senza essere ripetitivi e accetta un template come argomento
-	// template.PareGlob prende tutti i template dentro una cartella
-	// template.New mi serve per inizializzare il puntatore a template, passargli le funzioni e fargliele trovare inizializzate ai files .gohtml
-	tpl = template.Must(template.New("").Funcs(fn).ParseGlob("templates/*.gohtml"))
-}
+var db *sql.DB
 
 func index(w http.ResponseWriter, r *http.Request) {
-
 	// creo una variabile da passare al template
 	music := []string{"pop", "rock", "rap", "metal", "classical"}
+	generateHTML(w, music, "layout", "index", "partial")
 
-	// tpl.ExecuteTemplate esegue il template
-	tpl.ExecuteTemplate(w, "index.gohtml", music)
 }
 
 func dashboard(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +39,70 @@ func dashboard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(c)
-	tpl.ExecuteTemplate(w, "dashboard.gohtml", c.Value)
+	generateHTML(w, c.Value, "layout", "dashboard")
+}
+
+func getUsers(w http.ResponseWriter, r *http.Request) {
+	// _, err := r.Cookie("session")
+	// if err != nil {
+	// 	http.Redirect(w, r, "/", http.StatusUnauthorized)
+	// 	return
+	// }
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+	rows, err := db.Query("SELECT * FROM users")
+	if err != nil {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+	defer rows.Close()
+
+	urs := make([]User, 0)
+	for rows.Next() {
+		us := User{}
+		err := rows.Scan(&us.ID, &us.Name, &us.Surname, &us.Email, &us.Password, &us.Role)
+		if err != nil {
+			http.Error(w, http.StatusText(500), 500)
+			return
+		}
+		urs = append(urs, us)
+	}
+	if err = rows.Err(); err != nil {
+		http.Error(w, http.StatusText(500), 500)
+		return
+	}
+	generateHTML(w, urs, "layout", "users")
+}
+
+func getUser(w http.ResponseWriter, r *http.Request) {
+	// _, err := r.Cookie("session")
+	// if err != nil {
+	// 	http.Redirect(w, r, "/", http.StatusUnauthorized)
+	// 	return
+	// }
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
+		return
+	}
+	param := getParams(r)[2]
+
+	log.Println(param)
+
+	row := db.QueryRow("SELECT * FROM users where id = $1", param)
+
+	us := User{}
+	err := row.Scan(&us.ID, &us.Name, &us.Surname, &us.Email, &us.Password, &us.Role)
+	switch {
+		case err == sql.ErrNoRows:
+			http.NotFound(w, r)
+			return
+		case err != nil:
+			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+			return
+	}
+	generateHTML(w, us, "layout", "user")
 }
 
 func checkForm(w http.ResponseWriter, r *http.Request) {
@@ -82,14 +117,39 @@ func checkForm(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/read-cookie", http.StatusSeeOther)
 }
 
+// funzione di inizializzazione
+func init() {
+	var err error
+
+	// inizializzo DB
+	db, err = sql.Open("postgres", "postgres://arcy:Aleedenny10@localhost/go?sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("Connected to the DB")
+}
+
 func main() {
+	// carico gli assets statici
+	files := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", files))
 	// con HandleFunc ottengo un codice più pulito in quanto si occupa lui, una volta passata una funzione con argomenti (res http.ResponseWriter, req *http.Request),
 	// di creare il multiplexer
 	http.HandleFunc("/", index)
 	http.HandleFunc("/check-form", checkForm)
 	http.HandleFunc("/dashboard", dashboard)
+	http.HandleFunc("/users", getUsers)
+	http.HandleFunc("/user/", getUser) // si potrebbe usare StripPrefix per togliere user e lasciare solo il parametro
 	http.HandleFunc("/signup", signup)
 	http.HandleFunc("/logout", logout)
 	http.Handle("/favicon.ico", http.NotFoundHandler())
-	http.ListenAndServe(":8000", nil)
+	log.Println("Listening on :8000...")
+	err := http.ListenAndServe(":8000", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

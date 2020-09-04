@@ -27,9 +27,46 @@ func amigos(w http.ResponseWriter, req *http.Request) {
 }
 ```
 
-### Scrivere sul DB
+### POSTGRES CHEATSHEET
 
-**Metodo 1**
+**create a db**
+
+`CREATE DATABASE bookstore;`
+
+**create user**
+
+`CREATE USER bond WITH PASSWORD 'password';`
+
+**grant privileges**
+
+`GRANT ALL PRIVILEGES ON DATABASE bookstore to bond;`
+
+**creare una tabella**
+
+```sql
+CREATE TABLE users
+(
+    id SERIAL NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    surname VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+	role INT NOT NULL DEFAULT 1,
+	created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+	updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (id)
+);
+```
+
+**inserire il primo utente admin**
+
+```sql
+insert into users (name, surname, email, password, role) values ("alessandro", "arcidiaco", "arcidiaco.a@gmail.com", "password", 0)
+```
+
+### GO SQL COMMANDS
+
+**Create Metodo 1**
 
 ```go
 func create(w http.ResponseWriter, req *http.Request) {
@@ -50,7 +87,7 @@ func create(w http.ResponseWriter, req *http.Request) {
 }
 ```
 
-**Metodo 2**
+**Create Metodo 2**
 
 ```go
 func create(w http.ResponseWriter, req *http.Request) {
