@@ -1,18 +1,5 @@
-html,
-body {
-  margin: 0;
-  padding: 0;
-}
+@tailwind base;
 
-ul {
-  margin: 0;
-  padding: 0;
-}
+@tailwind components;
 
-ul li {
-  color: green;
-}
-
-main {
-  padding: 30px;
-}
+@tailwind utilities;

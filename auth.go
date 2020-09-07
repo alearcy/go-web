@@ -9,12 +9,12 @@ import (
 
 // User variabili della struct in maiuscolo per renderle esportabili
 type User struct {
-	ID 	  string
-	Name      string
-	Surname   string
-	Email     string
-	Password  []byte
-	Role      int
+	ID       string
+	Name     string
+	Surname  string
+	Email    string
+	Password []byte
+	Role     int
 }
 
 func signup(w http.ResponseWriter, r *http.Request) {

@@ -1,0 +1,10 @@
+{{define "partial"}}
+<div class="p-4 border">
+  <h2>Io sono un partial</h2>
+  <ul>
+    {{range .}}
+    <li>{{uppercase .}}</li>
+    {{end}}
+  </ul>
+</div>
+{{end}}

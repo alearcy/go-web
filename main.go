@@ -43,6 +43,8 @@ func dashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
+	// TODO: come da manuale, crare una funzione di sessione che controlli che ci sia il cookie e in caso affermativo controlli che combaci con la sessione in DB
+
 	// _, err := r.Cookie("session")
 	// if err != nil {
 	// 	http.Redirect(w, r, "/", http.StatusUnauthorized)
@@ -95,12 +97,12 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	us := User{}
 	err := row.Scan(&us.ID, &us.Name, &us.Surname, &us.Email, &us.Password, &us.Role)
 	switch {
-		case err == sql.ErrNoRows:
-			http.NotFound(w, r)
-			return
-		case err != nil:
-			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
-			return
+	case err == sql.ErrNoRows:
+		http.NotFound(w, r)
+		return
+	case err != nil:
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
+		return
 	}
 	generateHTML(w, us, "layout", "user")
 }
@@ -137,16 +139,16 @@ func main() {
 	// carico gli assets statici
 	files := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", files))
+	http.Handle("/favicon.ico", http.NotFoundHandler())
 	// con HandleFunc ottengo un codice più pulito in quanto si occupa lui, una volta passata una funzione con argomenti (res http.ResponseWriter, req *http.Request),
 	// di creare il multiplexer
 	http.HandleFunc("/", index)
-	http.HandleFunc("/check-form", checkForm)
-	http.HandleFunc("/dashboard", dashboard)
-	http.HandleFunc("/users", getUsers)
+	http.HandleFunc("/check-form/", checkForm)
+	http.HandleFunc("/dashboard/", dashboard)
+	http.HandleFunc("/users/", getUsers)
 	http.HandleFunc("/user/", getUser) // si potrebbe usare StripPrefix per togliere user e lasciare solo il parametro
-	http.HandleFunc("/signup", signup)
-	http.HandleFunc("/logout", logout)
-	http.Handle("/favicon.ico", http.NotFoundHandler())
+	http.HandleFunc("/signup/", signup)
+	http.HandleFunc("/logout/", logout)
 	log.Println("Listening on :8000...")
 	err := http.ListenAndServe(":8000", nil)
 	if err != nil {
