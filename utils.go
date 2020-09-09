@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	_ "log"
 	"net/http"
 	"strings"
 	"text/template"
@@ -26,17 +26,8 @@ func generateHTML(w http.ResponseWriter, data interface{}, files ...string) {
 	templates.ExecuteTemplate(w, "layout", data)
 }
 
-// TODO: refactor
-func getParams(r *http.Request) []string {
-	keys := strings.Split(r.URL.Path, "/")
-	log.Println(r.URL.Path)
-        if len(keys) > 0 {
-		params := make([]string, 0)
-		for _, v := range keys {
-			log.Println(v + "\n")
-			params = append(params, v)
-		}
-        	return params
-	}
-	return nil
+
+func getParam(r *http.Request, s string) string {
+	param := strings.TrimPrefix(r.URL.Path, s)
+	return param
 }

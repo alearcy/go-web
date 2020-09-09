@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"time"
+	_ "github.com/julienschmidt/httprouter"
 )
 
 type session struct {
@@ -43,13 +44,6 @@ func dashboard(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	// TODO: come da manuale, crare una funzione di sessione che controlli che ci sia il cookie e in caso affermativo controlli che combaci con la sessione in DB
-
-	// _, err := r.Cookie("session")
-	// if err != nil {
-	// 	http.Redirect(w, r, "/", http.StatusUnauthorized)
-	// 	return
-	// }
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
 		return
@@ -79,18 +73,11 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
-	// _, err := r.Cookie("session")
-	// if err != nil {
-	// 	http.Redirect(w, r, "/", http.StatusUnauthorized)
-	// 	return
-	// }
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
 		return
 	}
-	param := getParams(r)[2]
-
-	log.Println(param)
+	param := getParam(r, "/user/")
 
 	row := db.QueryRow("SELECT * FROM users where id = $1", param)
 
@@ -105,18 +92,6 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	generateHTML(w, us, "layout", "user")
-}
-
-func checkForm(w http.ResponseWriter, r *http.Request) {
-	name := r.FormValue("fname")
-	f, _, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer f.Close()
-	log.Println("il mio nome: ", name, "il mio file: ", f)
-	http.Redirect(w, r, "/read-cookie", http.StatusSeeOther)
 }
 
 // funzione di inizializzazione
@@ -143,10 +118,9 @@ func main() {
 	// con HandleFunc ottengo un codice più pulito in quanto si occupa lui, una volta passata una funzione con argomenti (res http.ResponseWriter, req *http.Request),
 	// di creare il multiplexer
 	http.HandleFunc("/", index)
-	http.HandleFunc("/check-form/", checkForm)
-	http.HandleFunc("/dashboard/", dashboard)
-	http.HandleFunc("/users/", getUsers)
-	http.HandleFunc("/user/", getUser) // si potrebbe usare StripPrefix per togliere user e lasciare solo il parametro
+	http.HandleFunc("/dashboard/", protected(dashboard))
+	http.HandleFunc("/users/", protected(getUsers))
+	http.HandleFunc("/user/", protected(getUser))
 	http.HandleFunc("/signup/", signup)
 	http.HandleFunc("/logout/", logout)
 	log.Println("Listening on :8000...")

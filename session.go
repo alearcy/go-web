@@ -50,6 +50,7 @@ func cleanSessions() {
 
 func isLoggedIn(r *http.Request) bool {
 	_, err := r.Cookie("session")
+	//TODO: check also in DB session table
 	if err != nil {
 		return false
 	}

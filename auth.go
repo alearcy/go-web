@@ -92,3 +92,14 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
+
+func protected(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ok := isLoggedIn(r)
+		if !ok {
+			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			return
+		}
+		h(w, r)
+	}
+}
