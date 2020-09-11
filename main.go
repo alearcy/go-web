@@ -27,9 +27,11 @@ var tpl *template.Template
 var db *sql.DB
 
 func index(w http.ResponseWriter, r *http.Request) {
+	// creo un cookie con un messaggio flash
+	flash(w, "Benvenuto")
 	// creo una variabile da passare al template
 	music := []string{"pop", "rock", "rap", "metal", "classical"}
-	generateHTML(w, music, "layout", "index", "partial")
+	generateHTML(w, r, music, "layout", "index", "partial")
 
 }
 
@@ -39,8 +41,7 @@ func dashboard(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusUnauthorized)
 		return
 	}
-	log.Println(c)
-	generateHTML(w, c.Value, "layout", "dashboard")
+	generateHTML(w, r, c.Value, "layout", "dashboard")
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +70,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
-	generateHTML(w, urs, "layout", "users")
+	generateHTML(w, r, urs, "layout", "users")
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +92,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
-	generateHTML(w, us, "layout", "user")
+	generateHTML(w, r, us, "layout", "user")
 }
 
 // funzione di inizializzazione

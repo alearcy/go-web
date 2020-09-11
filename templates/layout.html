@@ -16,7 +16,8 @@
   </head>
 
   <body>
-    {{template "content" .}}
+    <p>{{ .FlashMessages }}</p>
+    {{template "content" .Data}}
   </body>
 </html>
 {{end}}
