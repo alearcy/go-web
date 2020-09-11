@@ -98,7 +98,6 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 // funzione di inizializzazione
 func init() {
 	var err error
-
 	// inizializzo DB
 	db, err = sql.Open("postgres", "postgres://arcy:Aleedenny10@localhost/go?sslmode=disable")
 	if err != nil {

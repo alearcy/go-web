@@ -57,11 +57,13 @@ func login(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		u, ok := dbUsers[email]
 		if !ok {
+			flash(w, "Email o password non validi")
 			http.Error(w, "Email o password non validi", http.StatusForbidden)
 			return
 		}
 		err := bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
+			flash(w, "Email o password non validi")
 			http.Error(w, "Email o password non validi", http.StatusForbidden)
 			return
 		}

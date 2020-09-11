@@ -40,7 +40,6 @@ func getParam(r *http.Request, toStrip string) string {
 	return param
 }
 
-//TODO: creare flash messages con cookie
 func flash(w http.ResponseWriter, s string) {
 	msg := []byte(s)
 	c := http.Cookie{
