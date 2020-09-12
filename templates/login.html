@@ -1,0 +1,14 @@
+{{define "content"}}
+<h1>Login</h1>
+<main>
+  <form action="/login" method="POST">
+    <input type="email" name="email" placeholder="Email" />
+    <input type="password" name="password" placeholder="Password" />
+    <label>
+      Ricordami
+      <input type="checkbox" name="remember" value="remember" />
+    </label>
+    <input type="submit" value="Entra" />
+  </form>
+</main>
+{{end}}

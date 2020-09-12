@@ -46,17 +46,21 @@ func amigos(w http.ResponseWriter, req *http.Request) {
 ```sql
 CREATE TABLE users
 (
-    id SERIAL NOT NULL,
+    id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    uuid VARCHAR(64) NOT NULL UNIQUE,
     surname VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
 	role INT NOT NULL DEFAULT 1,
 	created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 	updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (id)
 );
 ```
+
+## Lanciare il setup di SQL
+
+`psql -f setup.sql -d database_name` dove database_name è il nome del database che si vuole creare.
 
 **inserire il primo utente admin**
 

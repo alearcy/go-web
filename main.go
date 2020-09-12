@@ -3,18 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/julienschmidt/httprouter"
 	_ "github.com/lib/pq"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
-	_ "github.com/julienschmidt/httprouter"
 )
-
-type session struct {
-	uID          string
-	activityTime time.Time
-}
 
 // simulo due DB, uno di sessione e uno degli utenti
 var dbUsers = map[string]User{}       // user ID, user

@@ -1,10 +1,17 @@
 {{define "content"}}
-<h1>Signup</h1>
+<h1>Crea utente</h1>
 <main>
   <form action="/signup" method="POST">
-    <input type="email" name="email" autofocus autocomplete="off" placeholder="Email">
-    <input type="password" name="password" placeholder="Password">
-    <input type="submit" value="Registrati">
+    <input type="name" name="name" autofocus placeholder="Nome" />
+    <input type="surname" name="surname" placeholder="Cognome" />
+    <input type="email" name="email" placeholder="Email" />
+    <input type="password" name="password" placeholder="Password" />
+    <input
+      type="password2"
+      name="password2"
+      placeholder="Password di conferma"
+    />
+    <input type="submit" value="Crea" />
   </form>
 </main>
 {{end}}

@@ -17,10 +17,10 @@ var fn = template.FuncMap{
 
 // generate templates based on data and html
 func generateHTML(w http.ResponseWriter, r *http.Request, data interface{}, files ...string) {
-	flashMessages, _ := showFlash(w, r) 
+	flashMessages, _ := showFlash(w, r)
 	dataWithFlashMsgs := map[string]interface{}{
 		"FlashMessages": flashMessages,
-		"Data": data,
+		"Data":          data,
 	}
 
 	var a []string
@@ -34,7 +34,6 @@ func generateHTML(w http.ResponseWriter, r *http.Request, data interface{}, file
 	templates.ExecuteTemplate(w, "layout", dataWithFlashMsgs)
 }
 
-
 func getParam(r *http.Request, toStrip string) string {
 	param := strings.TrimPrefix(r.URL.Path, toStrip)
 	return param
@@ -43,23 +42,28 @@ func getParam(r *http.Request, toStrip string) string {
 func flash(w http.ResponseWriter, s string) {
 	msg := []byte(s)
 	c := http.Cookie{
-		Name: "flash",
+		Name:  "flash",
 		Value: base64.URLEncoding.EncodeToString(msg),
 	}
 	http.SetCookie(w, &c)
 }
 
 func showFlash(w http.ResponseWriter, r *http.Request) (string, error) {
+	// TODO: meglio usare questo perché potrei avere più flash messages
+	// quindi anche nel template meglio usare un ciclo per mostrare i messaggi
+	// for _, cookie := range r.Cookies() {
+	// 	fmt.Fprint(w, cookie.Name)
+	// }
 	c, err := r.Cookie("flash")
 	var val []byte
 	if err != nil {
 		return "", err
 	}
 	rc := http.Cookie{
-			Name: "flash",
-			MaxAge: -1,
-			Expires: time.Unix(1, 0),
-		}
+		Name:    "flash",
+		MaxAge:  -1,
+		Expires: time.Unix(1, 0),
+	}
 	http.SetCookie(w, &rc)
 	val, _ = base64.URLEncoding.DecodeString(c.Value)
 	return string(val), nil
