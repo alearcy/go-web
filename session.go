@@ -23,14 +23,14 @@ func generateUUID() (string, error) {
 	return sIDs, nil
 }
 
-func generateSession(w http.ResponseWriter, user User, remember bool, uuid string) error {
+func generateSession(w http.ResponseWriter, user User, remember string, uuid string) (bool, error) {
 	c := http.Cookie{
 		Name:     "session",
 		Value:    uuid,
 		HttpOnly: true,
 		// Secure: true solo HTTPS
 	}
-	if remember {
+	if remember == "remember" {
 		// scade dopo un anno, altrimenti a ogni nuova sessione
 		c.Expires = time.Now().Add(365 * 24 * time.Hour)
 	}
@@ -39,34 +39,46 @@ func generateSession(w http.ResponseWriter, user User, remember bool, uuid strin
 	if err != nil {
 		flash(w, "Non è stato possibile creare la sessione utente, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return err
+		return false, err
 	}
 	http.SetCookie(w, &c)
-	return nil
+	return true, nil
 }
 
-func deleteCookie(w http.ResponseWriter, r *http.Request) (bool, error) {
+func deleteCookie(w http.ResponseWriter, r *http.Request) error {
 	c, err := r.Cookie("session")
 	if err != nil {
-		return false, err
+		return err
 	}
 	_, err = db.Exec("DELETE FROM sessions WHERE sessionID = $i", c.Value)
 	if err != nil {
 		flash(w, "Non è stato possibile sloggare l'utente.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return false, err
+		return err
 	}
 	c.MaxAge = -1
 	c.Value = ""
 	http.SetCookie(w, c)
-	return true, nil
+	return nil
 }
 
-func isLoggedIn(r *http.Request) bool {
-	_, err := r.Cookie("session")
+func isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("session")
 	if err != nil {
+		// non ho trovato il cookie quindi non sono loggato
 		return false
 	}
-	//TODO: check also in DB session table
-	return true
+	// cerco nella tabella sessions se esiste quella con sessionID del cookie
+	rows, err := db.Query("SELECT * FROM sessions where sessionID = $1)", c.Value)
+	if err != nil {
+		flash(w, "Non è stato possibile interrogare il DB, riprova.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false
+	}
+	defer rows.Close()
+	if rows.Next() {
+		// ho trovato una sessione con il sessionID del cookie quindi sono loggato
+		return true
+	}
+	return false
 }

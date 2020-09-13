@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
+	_ "fmt"
 	"golang.org/x/crypto/bcrypt"
-	"log"
+	_ "log"
 	"net/http"
-	"time"
+	_ "time"
 )
 
 // User variabili della struct in maiuscolo per renderle esportabili
@@ -58,7 +58,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/users", http.StatusSeeOther)
 		return
 	}
-	if !isLoggedIn(r) {
+	if !isLoggedIn(w, r) {
 		generateHTML(w, r, nil, "layout", "signup")
 		return
 	}
@@ -80,8 +80,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		defer rows.Close()
 		if rows.Next() {
-			//TODO: controllare che le pwd coincidano
-			//se coincidono creare la sessione salvando nome, mail e uuid nel cookie e redirect su /dashboard
+			//e redirect su /dashboard
 			u := User{}
 			err := rows.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
@@ -96,32 +95,27 @@ func login(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			uuid, _ := generateUUID()
-			if remember == "remember" {
-				//TODO: valutare cosa fare se da errore di salvataggio sessione sul DB
-				_ = generateSession(w, u, true, uuid)
-			} else {
-				_ = generateSession(w, u, false, uuid)
+			if ok, _ := generateSession(w, u, remember, uuid); ok {
+				http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 			}
 		} else {
 			flash(w, "Email o password non validi")
 			http.Error(w, "Email o password non validi", http.StatusForbidden)
 			return
 		}
-
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	}
-	if isLoggedIn(r) {
+	if isLoggedIn(w, r) {
 		generateHTML(w, r, nil, "layout", "dashboard")
 		return
 	}
 }
 
 func logout(w http.ResponseWriter, r *http.Request) {
-	if !isLoggedIn(r) {
+	if !isLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	_, err := deleteCookie(w, r)
+	err := deleteCookie(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -131,7 +125,7 @@ func logout(w http.ResponseWriter, r *http.Request) {
 
 func protected(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ok := isLoggedIn(r)
+		ok := isLoggedIn(w, r)
 		if !ok {
 			http.Redirect(w, r, "/", http.StatusUnauthorized)
 			return
