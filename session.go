@@ -9,8 +9,7 @@ import (
 
 type session struct {
 	ID        int
-	UUID      string
-	email     string
+	sessionID      string
 	userID    int
 	createdAt time.Time
 }
@@ -35,8 +34,8 @@ func generateSession(w http.ResponseWriter, user User, remember bool, uuid strin
 		// scade dopo un anno, altrimenti a ogni nuova sessione
 		c.Expires = time.Now().Add(365 * 24 * time.Hour)
 	}
-	s := session{UUID: uuid, email: user.Email, userID: user.ID, createdAt: time.Now()}
-	_, err := db.Exec("insert into sessions (uuid, email, user_id, created_at) values (?, ?, ?, ?)", &s.UUID, &s.email, &s.userID, &s.createdAt)
+	s := session{sessionID: uuid, userID: user.ID, createdAt: time.Now()}
+	_, err := db.Exec("insert into sessions (uuid, email, user_id, created_at) values (?, ?, ?, ?)", &s.sessionID, &s.userID, &s.createdAt)
 	if err != nil {
 		flash(w, "Non è stato possibile creare la sessione utente, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -51,7 +50,12 @@ func deleteCookie(w http.ResponseWriter, r *http.Request) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	//TODO: cancellarla da DB
+	_, err = db.Exec("DELETE FROM sessions WHERE sessionID = $i", c.Value)
+	if err != nil {
+		flash(w, "Non è stato possibile sloggare l'utente.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false, err
+	}
 	c.MaxAge = -1
 	c.Value = ""
 	http.SetCookie(w, c)
