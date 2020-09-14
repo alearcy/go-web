@@ -127,7 +127,7 @@ func protected(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ok := isLoggedIn(w, r)
 		if !ok {
-			http.Redirect(w, r, "/", http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusUnauthorized)
 			return
 		}
 		h(w, r)
