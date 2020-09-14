@@ -9,7 +9,7 @@ import (
 
 type session struct {
 	ID        int
-	sessionID      string
+	sessionID string
 	userID    int
 	createdAt time.Time
 }
