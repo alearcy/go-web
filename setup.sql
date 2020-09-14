@@ -5,7 +5,6 @@ DROP TABLE sessions IF EXISTS;
 CREATE TABLE sessions (
     id  serial PRIMARY KEY,
     uuid VARCHAR(64) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
     user_id INTEGER NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL
 )
