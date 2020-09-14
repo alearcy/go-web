@@ -3,7 +3,7 @@ package main
 import (
 	_ "fmt"
 	"golang.org/x/crypto/bcrypt"
-	_ "log"
+	"log"
 	"net/http"
 	_ "time"
 	"database/sql"
@@ -67,32 +67,27 @@ func login(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		remember := r.FormValue("remember")
-		//controllare se l'utente esiste prima di continuare
-		row := db.QueryRow("SELECT * FROM users WHERE email = $1", email)
+		//controllo se l'utente esiste prima di continuare
+		row := db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
 		u := User{}
-		err := row.Scan(&u.Password)
+		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 		switch {
 		case err == sql.ErrNoRows:
 			flash(w, "Utente non esistente.")
 			http.NotFound(w, r)
 			return
 		case err != nil:
+			log.Fatal(err)
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
-		// if err != nil {
-		// 	flash(w, "Utente non esistente.")
-		// 	http.Error(w, "Utente non esistente.", http.StatusForbidden)
-		// 	return
-		// }
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
 			flash(w, "Password non valida")
 			http.Error(w, "Password non valida", http.StatusForbidden)
 			return
 		}
-		uuid, _ := generateUUID()
-		if ok, _ := generateSession(w, u, remember, uuid); ok {
+		if ok, _ := generateSession(w, u, remember); ok {
 			http.Redirect(w, r, "/dashboard/", http.StatusSeeOther)
 		}	
 	}

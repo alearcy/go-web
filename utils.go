@@ -44,6 +44,7 @@ func flash(w http.ResponseWriter, s string) {
 	c := http.Cookie{
 		Name:  "flash",
 		Value: base64.URLEncoding.EncodeToString(msg),
+		Path: "/",
 	}
 	http.SetCookie(w, &c)
 }
@@ -63,6 +64,7 @@ func showFlash(w http.ResponseWriter, r *http.Request) (string, error) {
 		Name:    "flash",
 		MaxAge:  -1,
 		Expires: time.Unix(1, 0),
+		Path: "/",
 	}
 	http.SetCookie(w, &rc)
 	val, _ = base64.URLEncoding.DecodeString(c.Value)
