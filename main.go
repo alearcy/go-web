@@ -8,15 +8,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"time"
+	_ "time"
 )
-
-// simulo due DB, uno di sessione e uno degli utenti
-var dbUsers = map[string]User{}       // user ID, user
-var dbSessions = map[string]session{} // session ID, user ID
-var dbSessionsCleaned time.Time
-
-const sessionLength int = 30
 
 var tpl *template.Template
 var db *sql.DB
