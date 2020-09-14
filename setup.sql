@@ -1,5 +1,5 @@
-DROP TABLE users IF EXISTS;
-DROP TABLE sessions IF EXISTS;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS sessions;
 
 
 CREATE TABLE sessions (
@@ -7,10 +7,9 @@ CREATE TABLE sessions (
     uuid VARCHAR(64) NOT NULL UNIQUE,
     user_id INTEGER NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL
-)
+);
 
-CREATE TABLE users
-(
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     surname VARCHAR(255) NOT NULL,
@@ -18,5 +17,5 @@ CREATE TABLE users
     password VARCHAR(255) NOT NULL,
 	role INT NOT NULL DEFAULT 1,
 	created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-	updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+	updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

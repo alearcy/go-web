@@ -15,8 +15,6 @@ var tpl *template.Template
 var db *sql.DB
 
 func index(w http.ResponseWriter, r *http.Request) {
-	// creo un cookie con un messaggio flash
-	flash(w, "Benvenuto")
 	// creo una variabile da passare al template
 	music := []string{"pop", "rock", "rap", "metal", "classical"}
 	generateHTML(w, r, music, "layout", "index", "partial")
@@ -110,6 +108,7 @@ func main() {
 	http.HandleFunc("/users/", protected(getUsers))
 	http.HandleFunc("/user/", protected(getUser))
 	http.HandleFunc("/signup/", signup)
+	http.HandleFunc("/login/", login)
 	http.HandleFunc("/logout/", logout)
 	log.Println("Listening on :8000...")
 	err := http.ListenAndServe(":8000", nil)
