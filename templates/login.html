@@ -1,20 +1,60 @@
 {{define "content"}}
-<h1>Login</h1>
-<main>
-  <form method="POST" novalidate>
-    <input type="email" name="email" placeholder="Email" autofocus />
-    {{with .Errors.Email}}
-    <p>{{.}}</p>
-    {{end}}
-    <input type="password" name="password" placeholder="Password" />
-    {{with .Errors.Password}}
-    <p>{{.}}</p>
-    {{end}}
-    <label>
-      Ricordami
-      <input type="checkbox" name="remember" value="remember" />
-    </label>
-    <input type="submit" value="Entra" />
-  </form>
+<main class="px-4">
+  <div class="columns">
+    <div class="column is-half is-offset-one-quarter">
+      <div class="box">
+        <h1 class="title is-1 has-text-centered">Login</h1>
+        <form method="POST" novalidate>
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="control">
+              <input
+                class="input"
+                type="email"
+                name="email"
+                placeholder="Email"
+                autofocus
+              />
+            </div>
+            {{with .Errors.Email}}
+            <p class="help is-danger">{{.}}</p>
+            {{end}}
+          </div>
+          <div class="field">
+            <label class="label">Password</label>
+            <div class="control">
+              <input
+                class="input"
+                type="password"
+                name="password"
+                placeholder="Password"
+              />
+            </div>
+            {{with .Errors.Password}}
+            <p class="help is-danger">{{.}}</p>
+            {{end}}
+          </div>
+          <div class="field">
+            <div class="control">
+              <label class="label"
+                ><input
+                  class="checkbox"
+                  type="checkbox"
+                  name="remember"
+                  value="remember"
+                />
+                Ricordami
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              <input class="button is-primary" type="submit" value="Entra" />
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </main>
 {{end}}
