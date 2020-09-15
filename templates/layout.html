@@ -16,8 +16,12 @@
   </head>
 
   <body>
-    <p>{{ .FlashMessages }}</p>
-    {{template "content" .Data}}
+    {{if .FlashMessages}}
+    <div class="notification is-danger">
+      <button class="delete"></button>
+      {{ .FlashMessages }}
+    </div>
+    {{end}} {{template "content" .Data}}
   </body>
 </html>
 {{end}}

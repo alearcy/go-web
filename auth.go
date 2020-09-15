@@ -3,7 +3,6 @@ package main
 import (
 	_ "fmt"
 	"golang.org/x/crypto/bcrypt"
-	"log"
 	"net/http"
 	_ "time"
 	"database/sql"
@@ -45,7 +44,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			_, err = db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
 				flash(w, "Non è stato possibile salvare a DB, riprova.")
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Redirect(w, r, "/signup/", http.StatusSeeOther)
 				return
 			}
 			http.Redirect(w, r, "/login/", http.StatusSeeOther)
@@ -73,18 +72,17 @@ func login(w http.ResponseWriter, r *http.Request) {
 		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 		switch {
 		case err == sql.ErrNoRows:
-			flash(w, "Utente non esistente.")
-			http.NotFound(w, r)
+			flash(w, "Nome utente errato o non esistente.")
+			http.Redirect(w, r, "/login/", http.StatusSeeOther)
 			return
 		case err != nil:
-			log.Fatal(err)
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
 			flash(w, "Password non valida")
-			http.Error(w, "Password non valida", http.StatusForbidden)
+			http.Redirect(w, r, "/login/", http.StatusSeeOther)
 			return
 		}
 		if ok, _ := generateSession(w, u, remember); ok {

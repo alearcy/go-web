@@ -37,7 +37,7 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	rows, err := db.Query("SELECT * FROM users")
 	if err != nil {
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -47,13 +47,13 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		us := User{}
 		err := rows.Scan(&us.ID, &us.Name, &us.Surname, &us.Email, &us.Password, &us.Role)
 		if err != nil {
-			http.Error(w, http.StatusText(500), 500)
+			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
 		urs = append(urs, us)
 	}
 	if err = rows.Err(); err != nil {
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
 	generateHTML(w, r, urs, "layout", "users")
