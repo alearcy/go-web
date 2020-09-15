@@ -12,16 +12,19 @@
       defer
       src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"
     ></script>
-    <title>Go template lesson</title>
+    <title>Leleat</title>
   </head>
 
   <body>
     {{if .FlashMessages}}
-    <div class="notification is-danger">
-      <button class="delete"></button>
-      {{ .FlashMessages }}
+    <div class="container mx-auto">
+      <div class="notification is-danger">
+        <button class="delete" onclick="closeNotification()"></button>
+        {{ .FlashMessages }}
+      </div>
     </div>
     {{end}} {{template "content" .Data}}
+    <script src="/static/js/main.js"></script>
   </body>
 </html>
 {{end}}
