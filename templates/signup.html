@@ -1,11 +1,23 @@
 {{define "content"}}
 <h1>Crea utente</h1>
 <main>
-  <form method="POST">
+  <form method="POST" novalidate>
     <input type="name" name="name" autofocus placeholder="Nome" />
+    {{with .Errors.Name}}
+    <p>{{.}}</p>
+    {{end}}
     <input type="surname" name="surname" placeholder="Cognome" />
+    {{with .Errors.Surname}}
+    <p>{{.}}</p>
+    {{end}}
     <input type="email" name="email" placeholder="Email" />
+    {{with .Errors.Password}}
+    <p>{{.}}</p>
+    {{end}}
     <input type="password" name="password" placeholder="Password" />
+    {{with .Errors.Password2}}
+    <p>{{.}}</p>
+    {{end}}
     <input
       type="password"
       name="password2"

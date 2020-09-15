@@ -21,15 +21,29 @@ type User struct {
 func signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
+		name := r.FormValue("name")
+		surname := r.FormValue("surname")
+		password := r.FormValue("password")
+		password2 := r.FormValue("password2")
+
+		sf := &SignupForm{
+			Email: email,
+			Password: password,
+			Password2: password2,
+			Name: name,
+			Surname: surname,
+		}
+
+		if ok := sf.Validate(); !ok {
+			generateHTML(w, r, sf, "layout", "signup")
+			return
+		}
+
 		//controllare se l'utente esiste prima di continuare
 		row := db.QueryRow("SELECT * FROM users WHERE email = $1", email)
 		u := User{}
 		err := row.Scan(&u.ID)
 		if err != nil {
-			name := r.FormValue("name")
-			surname := r.FormValue("surname")
-			password := r.FormValue("password")
-			password2 := r.FormValue("password2")
 			if password != password2 {
 				flash(w, "Le due password non coincidono")
 				http.Redirect(w, r, "/signup/", http.StatusSeeOther)
@@ -66,6 +80,18 @@ func login(w http.ResponseWriter, r *http.Request) {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		remember := r.FormValue("remember")
+
+		lf := &LoginForm{
+			Email: email,
+			Password: password,
+			Remember: remember,
+		}
+
+		if ok := lf.Validate(); !ok {
+			generateHTML(w, r, lf, "layout", "login")
+			return
+		}
+
 		//controllo se l'utente esiste prima di continuare
 		row := db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
 		u := User{}
