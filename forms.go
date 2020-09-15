@@ -15,7 +15,7 @@ type LoginForm struct {
 	Errors map[string]string
 }
 
-// Validate validates login form
+// Validate login form
 func (l *LoginForm) Validate() bool {
 	l.Errors = make(map[string]string)
 	match := rxEmail.Match([]byte(l.Email))
@@ -42,7 +42,7 @@ type SignupForm struct {
 	Errors map[string]string
 }
 
-// Validate validates login form
+// Validate signup form
 func (s *SignupForm) Validate() bool {
 	s.Errors = make(map[string]string)
 	match := rxEmail.Match([]byte(s.Email))
