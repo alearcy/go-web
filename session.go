@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"github.com/satori/go.uuid"
 	"net/http"
 	"time"
@@ -15,10 +14,7 @@ type session struct {
 }
 
 func generateUUID() (string, error) {
-	sID, err := uuid.NewV4()
-	if err != nil {
-		return "", errors.New("Error generating UUID")
-	}
+	sID := uuid.NewV4()
 	sIDs := sID.String()
 	return sIDs, nil
 }
