@@ -99,7 +99,7 @@ func main() {
 	r.HandleFunc("/users/create", signup)
 	r.HandleFunc("/login", login)
 	r.HandleFunc("/logout", logout)
-	log.Println("Listening on :8000...")
+	log.Println("Listening on localhost:8000...")
 	err := http.ListenAndServe(":8000", r)
 	if err != nil {
 		log.Fatal(err)
