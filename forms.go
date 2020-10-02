@@ -9,10 +9,10 @@ var rxEmail = regexp.MustCompile(".+@.+\\..+")
 
 // LoginForm create login form struct
 type LoginForm struct {
-	Email string
+	Email    string
 	Password string
 	Remember string
-	Errors map[string]string
+	Errors   map[string]string
 }
 
 // Validate login form
@@ -28,18 +28,17 @@ func (l *LoginForm) Validate() bool {
 	if strings.TrimSpace(l.Password) == "" {
 		l.Errors["Password"] = "Campo obbligatorio"
 	}
-	
 	return len(l.Errors) == 0
 }
 
 // SignupForm create signup form struct
 type SignupForm struct {
-	Email string
-	Password string
+	Email     string
+	Password  string
 	Password2 string
-	Name string
-	Surname string
-	Errors map[string]string
+	Name      string
+	Surname   string
+	Errors    map[string]string
 }
 
 // Validate signup form
@@ -64,6 +63,6 @@ func (s *SignupForm) Validate() bool {
 	if strings.TrimSpace(s.Surname) == "" {
 		s.Errors["Surname"] = "Campo obbligatorio"
 	}
-	
+
 	return len(s.Errors) == 0
 }

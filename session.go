@@ -25,7 +25,7 @@ func generateSession(w http.ResponseWriter, user User, remember string) (bool, e
 		Name:     "session",
 		Value:    uuid,
 		HttpOnly: true,
-		Path: "/",
+		Path:     "/",
 		// Secure: true solo HTTPS
 	}
 	if remember == "remember" {
@@ -73,7 +73,6 @@ func isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false
 	}
-	defer rows.Close()
 	if rows.Next() {
 		// ho trovato una sessione con il sessionID del cookie quindi sono loggato
 		return true

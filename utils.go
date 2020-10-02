@@ -34,17 +34,12 @@ func generateHTML(w http.ResponseWriter, r *http.Request, data interface{}, file
 	templates.ExecuteTemplate(w, "layout", dataWithFlashMsgs)
 }
 
-func getParam(r *http.Request, toStrip string) string {
-	param := strings.TrimPrefix(r.URL.Path, toStrip)
-	return param
-}
-
 func flash(w http.ResponseWriter, s string) {
 	msg := []byte(s)
 	c := http.Cookie{
 		Name:  "flash",
 		Value: base64.URLEncoding.EncodeToString(msg),
-		Path: "/",
+		Path:  "/",
 	}
 	http.SetCookie(w, &c)
 }
@@ -64,7 +59,7 @@ func showFlash(w http.ResponseWriter, r *http.Request) (string, error) {
 		Name:    "flash",
 		MaxAge:  -1,
 		Expires: time.Unix(1, 0),
-		Path: "/",
+		Path:    "/",
 	}
 	http.SetCookie(w, &rc)
 	val, _ = base64.URLEncoding.DecodeString(c.Value)

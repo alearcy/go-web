@@ -1,11 +1,12 @@
 package main
 
 import (
+	"database/sql"
 	_ "fmt"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	_ "time"
-	"database/sql"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // User variabili della struct in maiuscolo per renderle esportabili
@@ -27,11 +28,11 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		password2 := r.FormValue("password2")
 
 		sf := &SignupForm{
-			Email: email,
-			Password: password,
+			Email:     email,
+			Password:  password,
 			Password2: password2,
-			Name: name,
-			Surname: surname,
+			Name:      name,
+			Surname:   surname,
 		}
 
 		if ok := sf.Validate(); !ok {
@@ -46,7 +47,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if password != password2 {
 				flash(w, "Le due password non coincidono")
-				http.Redirect(w, r, "/signup/", http.StatusSeeOther)
+				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
 			}
 			cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
@@ -58,14 +59,14 @@ func signup(w http.ResponseWriter, r *http.Request) {
 			_, err = db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
 				flash(w, "Non è stato possibile salvare a DB, riprova.")
-				http.Redirect(w, r, "/signup/", http.StatusSeeOther)
+				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
 			}
-			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		flash(w, "Utente già esistente")
-		http.Redirect(w, r, "/signup/", http.StatusSeeOther)
+		http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 	}
 	if !isLoggedIn(w, r) {
 		generateHTML(w, r, nil, "layout", "signup")
@@ -82,7 +83,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		remember := r.FormValue("remember")
 
 		lf := &LoginForm{
-			Email: email,
+			Email:    email,
 			Password: password,
 			Remember: remember,
 		}
@@ -99,7 +100,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case err == sql.ErrNoRows:
 			flash(w, "Nome utente errato o non esistente.")
-			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		case err != nil:
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -108,16 +109,16 @@ func login(w http.ResponseWriter, r *http.Request) {
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
 			flash(w, "Password non valida")
-			http.Redirect(w, r, "/login/", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		if ok, _ := generateSession(w, u, remember); ok {
-			http.Redirect(w, r, "/dashboard/", http.StatusSeeOther)
-		}	
+			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+		}
 	}
 	if r.Method == http.MethodGet {
 		if isLoggedIn(w, r) {
-			http.Redirect(w, r, "/dashboard/", http.StatusSeeOther)
+			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 			return
 		}
 		generateHTML(w, r, nil, "layout", "login")
@@ -135,14 +136,14 @@ func logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/login/", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func protected(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ok := isLoggedIn(w, r)
 		if !ok {
-			http.Redirect(w, r, "/login/", http.StatusUnauthorized)
+			http.Redirect(w, r, "/login", http.StatusUnauthorized)
 			return
 		}
 		h(w, r)

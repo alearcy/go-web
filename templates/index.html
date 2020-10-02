@@ -4,25 +4,6 @@
   <div class="container">
     <h1 class="title is-1">Benvenuti nel templating di GO</h1>
     {{template "partial" .}}
-    <form action="/check-form" method="POST" enctype="multipart/form-data" class="mt-4 box">
-      <div class="field">
-        <label class="label">Nome</label>
-        <div class="control">
-          <input class="input" type="text" name="fname" autofocus autocomplete="off" placeholder="Il tuo nome" />
-        </div>
-      </div>
-      <div class="field">
-        <label class="label">Immagine</label>
-        <div class="control">
-          <input type="file" name="file" />
-        </div>
-      </div>
-      <div class="field is-grouped">
-        <div class="control">
-          <button class="button is-primary" type="submit">Invia</button>
-        </div>
-      </div>
-    </form>
   </div>
 </main>
 {{end}}
