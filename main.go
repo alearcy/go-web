@@ -3,12 +3,13 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gorilla/mux"
-	_ "github.com/julienschmidt/httprouter"
-	_ "github.com/lib/pq"
 	"log"
 	"net/http"
 	_ "time"
+
+	"github.com/gorilla/mux"
+	_ "github.com/julienschmidt/httprouter"
+	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
