@@ -1,9 +1,12 @@
-package main
+package session
 
 import (
 	"github.com/satori/go.uuid"
 	"net/http"
 	"time"
+	"web/auth"
+	"web/database"
+	"web/utils"
 )
 
 type session struct {
@@ -19,23 +22,24 @@ func generateUUID() (string, error) {
 	return sIDs, nil
 }
 
-func generateSession(w http.ResponseWriter, user User, remember string) (bool, error) {
-	uuid, _ := generateUUID()
+func GenerateSession(w http.ResponseWriter, user auth.User, remember string) (bool, error) {
+	uuId, _ := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
-		Value:    uuid,
+		Value:    uuId,
 		HttpOnly: true,
 		Path:     "/",
-		// Secure: true solo HTTPS
+		// solo HTTPS
+		// Secure: true
 	}
 	if remember == "remember" {
 		// scade dopo un anno, altrimenti a ogni nuova sessione
 		c.Expires = time.Now().Add(365 * 24 * time.Hour)
 	}
-	s := session{sessionID: uuid, userID: user.ID, createdAt: time.Now()}
-	_, err := db.Exec("insert into sessions (uuid, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
+	s := session{sessionID: uuId, userID: user.ID, createdAt: time.Now()}
+	_, err := database.Db.Exec("insert into sessions (uuId, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
 	if err != nil {
-		flash(w, "Non è stato possibile creare la sessione utente, riprova.")
+		utils.Flash(w, "Non è stato possibile creare la sessione utente, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false, err
 	}
@@ -43,14 +47,14 @@ func generateSession(w http.ResponseWriter, user User, remember string) (bool, e
 	return true, nil
 }
 
-func deleteCookie(w http.ResponseWriter, r *http.Request) error {
+func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	c, err := r.Cookie("session")
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("DELETE FROM sessions WHERE uuid = $1", c.Value)
+	_, err = database.Db.Exec("DELETE FROM sessions WHERE uuid = $1", c.Value)
 	if err != nil {
-		flash(w, "Non è stato possibile sloggare l'utente.")
+		utils.Flash(w, "Non è stato possibile sloggare l'utente.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
@@ -60,16 +64,16 @@ func deleteCookie(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func isLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("session")
 	if err != nil {
 		// non ho trovato il cookie quindi non sono loggato
 		return false
 	}
 	// cerco nella tabella sessions se esiste quella con sessionID del cookie
-	rows, err := db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
+	rows, err := database.Db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
 	if err != nil {
-		flash(w, "Non è stato possibile interrogare il DB, riprova.")
+		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false
 	}

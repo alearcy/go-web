@@ -1,4 +1,4 @@
-package main
+package utils
 
 import (
 	"encoding/base64"
@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-// per passare funzioni al template creo una variabile di tipo FuncMap che accetta una chiave stringa e una funzione qualsiasi
+//TODO: rendere questa un package con un po' di funzioni utili da passare
 var fn = template.FuncMap{
 	"uppercase": strings.ToUpper,
 }
 
 // generate templates based on data and html
-func generateHTML(w http.ResponseWriter, r *http.Request, data interface{}, files ...string) {
-	flashMessages, _ := showFlash(w, r)
+func GenerateHTML(w http.ResponseWriter, r *http.Request, data interface{}, files ...string) {
+	flashMessages, _ := ShowFlash(w, r)
 	dataWithFlashMsgs := map[string]interface{}{
 		"FlashMessages": flashMessages,
 		"Data":          data,
@@ -34,7 +34,7 @@ func generateHTML(w http.ResponseWriter, r *http.Request, data interface{}, file
 	templates.ExecuteTemplate(w, "layout", dataWithFlashMsgs)
 }
 
-func flash(w http.ResponseWriter, s string) {
+func Flash(w http.ResponseWriter, s string) {
 	msg := []byte(s)
 	c := http.Cookie{
 		Name:  "flash",
@@ -44,7 +44,7 @@ func flash(w http.ResponseWriter, s string) {
 	http.SetCookie(w, &c)
 }
 
-func showFlash(w http.ResponseWriter, r *http.Request) (string, error) {
+func ShowFlash(w http.ResponseWriter, r *http.Request) (string, error) {
 	// TODO: meglio usare questo perché potrei avere più flash messages
 	// quindi anche nel template meglio usare un ciclo per mostrare i messaggi
 	// for _, cookie := range r.Cookies() {

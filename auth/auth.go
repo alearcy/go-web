@@ -1,15 +1,15 @@
-package main
+package auth
 
 import (
 	"database/sql"
-	_ "fmt"
-	"net/http"
-	_ "time"
-
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
+	"web/database"
+	"web/forms"
+	"web/session"
+	"web/utils"
 )
 
-// User variabili della struct in maiuscolo per renderle esportabili
 type User struct {
 	ID       int
 	Name     string
@@ -19,7 +19,7 @@ type User struct {
 	Role     int
 }
 
-func signup(w http.ResponseWriter, r *http.Request) {
+func Signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		name := r.FormValue("name")
@@ -27,7 +27,7 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 		password2 := r.FormValue("password2")
 
-		sf := &SignupForm{
+		sf := &forms.SignupForm{
 			Email:     email,
 			Password:  password,
 			Password2: password2,
@@ -36,17 +36,17 @@ func signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := sf.Validate(); !ok {
-			generateHTML(w, r, sf, "layout", "signup")
+			utils.GenerateHTML(w, r, sf, "layout", "signup")
 			return
 		}
 
 		//controllare se l'utente esiste prima di continuare
-		row := db.QueryRow("SELECT * FROM users WHERE email = $1", email)
+		row := database.Db.QueryRow("SELECT * FROM users WHERE email = $1", email)
 		u := User{}
 		err := row.Scan(&u.ID)
 		if err != nil {
 			if password != password2 {
-				flash(w, "Le due password non coincidono")
+				utils.Flash(w, "Le due password non coincidono")
 				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
 			}
@@ -56,50 +56,50 @@ func signup(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			u := User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
-			_, err = db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
+			_, err = database.Db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
-				flash(w, "Non è stato possibile salvare a DB, riprova.")
+				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
 				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		flash(w, "Utente già esistente")
+		utils.Flash(w, "Utente già esistente")
 		http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 	}
-	if !isLoggedIn(w, r) {
-		generateHTML(w, r, nil, "layout", "signup")
+	if !session.IsLoggedIn(w, r) {
+		utils.GenerateHTML(w, r, nil, "layout", "signup")
 		return
 	}
-	flash(w, "Risulti già loggato!")
+	utils.Flash(w, "Risulti già loggato!")
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
-func login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 		remember := r.FormValue("remember")
 
-		lf := &LoginForm{
+		lf := &forms.LoginForm{
 			Email:    email,
 			Password: password,
 			Remember: remember,
 		}
 
 		if ok := lf.Validate(); !ok {
-			generateHTML(w, r, lf, "layout", "login")
+			utils.GenerateHTML(w, r, lf, "layout", "login")
 			return
 		}
 
 		//controllo se l'utente esiste prima di continuare
-		row := db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
+		row := database.Db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
 		u := User{}
 		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 		switch {
 		case err == sql.ErrNoRows:
-			flash(w, "Nome utente errato o non esistente.")
+			utils.Flash(w, "Nome utente errato o non esistente.")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		case err != nil:
@@ -108,30 +108,30 @@ func login(w http.ResponseWriter, r *http.Request) {
 		}
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
-			flash(w, "Password non valida")
+			utils.Flash(w, "Password non valida")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		if ok, _ := generateSession(w, u, remember); ok {
+		if ok, _ := session.GenerateSession(w, u, remember); ok {
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		}
 	}
 	if r.Method == http.MethodGet {
-		if isLoggedIn(w, r) {
+		if session.IsLoggedIn(w, r) {
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 			return
 		}
-		generateHTML(w, r, nil, "layout", "login")
+		utils.GenerateHTML(w, r, nil, "layout", "login")
 		return
 	}
 }
 
-func logout(w http.ResponseWriter, r *http.Request) {
-	if !isLoggedIn(w, r) {
+func Logout(w http.ResponseWriter, r *http.Request) {
+	if !session.IsLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	err := deleteCookie(w, r)
+	err := session.DeleteCookie(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -139,9 +139,9 @@ func logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-func protected(h http.HandlerFunc) http.HandlerFunc {
+func Protected(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ok := isLoggedIn(w, r)
+		ok := session.IsLoggedIn(w, r)
 		if !ok {
 			http.Redirect(w, r, "/login", http.StatusUnauthorized)
 			return
