@@ -1,8 +1,6 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -13,19 +11,9 @@ import (
 )
 
 func init() {
-	var err error
-	database.Db, err = sql.Open("postgres", "postgres://arcy:Aleedenny10@localhost/go?sslmode=disable")
-	if err != nil {
-		panic(err)
-	}
-	err = database.Db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Connected to the DB")
+	database.StartDb()
 }
 
-// TODO: add viper to read env and config file https://github.com/spf13/viper
 func main() {
 	files := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", files))

@@ -10,8 +10,7 @@ import (
 	"time"
 )
 
-//TODO: rendere questa un package con un po' di funzioni utili da passare
-var fn = template.FuncMap{
+var Fn = template.FuncMap{
 	"uppercase": strings.ToUpper,
 }
 
@@ -30,7 +29,7 @@ func GenerateHTML(w http.ResponseWriter, r *http.Request, data interface{}, file
 	// template.Must si occupa lui di fare l'error checking senza essere ripetitivi e accetta un template come argomento
 	// template.PareGlob prende tutti i template dentro una cartella mentre template.ParseFiles uno alla volta dentro slice
 	// template.New mi serve per inizializzare il puntatore a template, passargli le funzioni e fargliele trovare inizializzate ai files .gohtml
-	templates := template.Must(template.New("").Funcs(fn).ParseFiles(a...))
+	templates := template.Must(template.New("").Funcs(Fn).ParseFiles(a...))
 	templates.ExecuteTemplate(w, "layout", dataWithFlashMsgs)
 }
 

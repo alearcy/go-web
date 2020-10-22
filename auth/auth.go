@@ -2,11 +2,12 @@ package auth
 
 import (
 	"database/sql"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"time"
 	"web/database"
 	"web/forms"
-	"web/session"
 	"web/utils"
 )
 
@@ -17,6 +18,81 @@ type User struct {
 	Email    string
 	Password []byte
 	Role     int
+}
+
+type session struct {
+	ID        int
+	sessionID string
+	userID    int
+	createdAt time.Time
+}
+
+func generateUUID() (string, error) {
+	sID := uuid.NewV4()
+	sIDs := sID.String()
+	return sIDs, nil
+}
+
+func GenerateSession(w http.ResponseWriter, user User, remember string) (bool, error) {
+	uuId, _ := generateUUID()
+	c := http.Cookie{
+		Name:     "session",
+		Value:    uuId,
+		HttpOnly: true,
+		Path:     "/",
+		// solo HTTPS
+		// Secure: true
+	}
+	if remember == "remember" {
+		// scade dopo un anno, altrimenti a ogni nuova sessione
+		c.Expires = time.Now().Add(365 * 24 * time.Hour)
+	}
+	s := session{sessionID: uuId, userID: user.ID, createdAt: time.Now()}
+	_, err := database.Db.Exec("insert into sessions (uuId, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
+	if err != nil {
+		utils.Flash(w, "Non è stato possibile creare la sessione utente, riprova.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false, err
+	}
+	http.SetCookie(w, &c)
+	return true, nil
+}
+
+func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
+	c, err := r.Cookie("session")
+	if err != nil {
+		return err
+	}
+	_, err = database.Db.Exec("DELETE FROM sessions WHERE uuid = $1", c.Value)
+	if err != nil {
+		utils.Flash(w, "Non è stato possibile sloggare l'utente.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	c.MaxAge = -1
+	c.Value = ""
+	http.SetCookie(w, c)
+	return nil
+}
+
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+	c, err := r.Cookie("session")
+	if err != nil {
+		// non ho trovato il cookie quindi non sono loggato
+		return false
+	}
+	// cerco nella tabella sessions se esiste quella con sessionID del cookie
+	rows, err := database.Db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
+	if err != nil {
+		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return false
+	}
+	if rows.Next() {
+		// ho trovato una sessione con il sessionID del cookie quindi sono loggato
+		return true
+	}
+	return false
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
@@ -68,7 +144,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		utils.Flash(w, "Utente già esistente")
 		http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 	}
-	if !session.IsLoggedIn(w, r) {
+	if !IsLoggedIn(w, r) {
 		utils.GenerateHTML(w, r, nil, "layout", "signup")
 		return
 	}
@@ -112,12 +188,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
-		if ok, _ := session.GenerateSession(w, u, remember); ok {
+		if ok, _ := GenerateSession(w, u, remember); ok {
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 		}
 	}
 	if r.Method == http.MethodGet {
-		if session.IsLoggedIn(w, r) {
+		if IsLoggedIn(w, r) {
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 			return
 		}
@@ -127,11 +203,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
-	if !session.IsLoggedIn(w, r) {
+	if !IsLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
-	err := session.DeleteCookie(w, r)
+	err := DeleteCookie(w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -141,7 +217,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 func Protected(h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ok := session.IsLoggedIn(w, r)
+		ok := IsLoggedIn(w, r)
 		if !ok {
 			http.Redirect(w, r, "/login", http.StatusUnauthorized)
 			return

@@ -6,6 +6,7 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
+	// example values
 	music := []string{"pop", "rock", "rap", "metal", "classical"}
 	utils.GenerateHTML(w, r, music, "layout", "index", "partial")
 }
