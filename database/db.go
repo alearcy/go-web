@@ -3,13 +3,15 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/spf13/viper"
 	"log"
+
+	"github.com/spf13/viper"
 )
 
+// Db - the db instance
 var Db *sql.DB
 
+// StartDb - db initialization function
 func StartDb() {
 	viper.SetConfigFile(".env")
 	var err error

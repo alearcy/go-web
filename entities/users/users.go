@@ -3,13 +3,15 @@ package users
 import (
 	"database/sql"
 	"fmt"
-	"github.com/gorilla/mux"
 	"net/http"
 	"web/auth"
 	"web/database"
 	"web/utils"
+
+	"github.com/gorilla/mux"
 )
 
+// GetUsers get all active users from DB
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)
@@ -37,6 +39,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	utils.GenerateHTML(w, r, urs, "layout", "users")
 }
 
+// GetUser get a single user from thd DB passing the known ID
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(405), http.StatusMethodNotAllowed)

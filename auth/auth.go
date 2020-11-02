@@ -2,15 +2,17 @@ package auth
 
 import (
 	"database/sql"
-	uuid "github.com/satori/go.uuid"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"time"
 	"web/database"
 	"web/forms"
 	"web/utils"
+
+	uuid "github.com/satori/go.uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
+// User struct
 type User struct {
 	ID       int
 	Name     string
@@ -33,11 +35,12 @@ func generateUUID() (string, error) {
 	return sIDs, nil
 }
 
+// GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
 func GenerateSession(w http.ResponseWriter, user User, remember string) (bool, error) {
-	uuId, _ := generateUUID()
+	uuID, _ := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
-		Value:    uuId,
+		Value:    uuID,
 		HttpOnly: true,
 		Path:     "/",
 		// solo HTTPS
@@ -47,7 +50,7 @@ func GenerateSession(w http.ResponseWriter, user User, remember string) (bool, e
 		// scade dopo un anno, altrimenti a ogni nuova sessione
 		c.Expires = time.Now().Add(365 * 24 * time.Hour)
 	}
-	s := session{sessionID: uuId, userID: user.ID, createdAt: time.Now()}
+	s := session{sessionID: uuID, userID: user.ID, createdAt: time.Now()}
 	_, err := database.Db.Exec("insert into sessions (uuId, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
 	if err != nil {
 		utils.Flash(w, "Non è stato possibile creare la sessione utente, riprova.")
@@ -58,6 +61,7 @@ func GenerateSession(w http.ResponseWriter, user User, remember string) (bool, e
 	return true, nil
 }
 
+// DeleteCookie - delete the session cookie passing ResponseWrtier and Request pointer
 func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	c, err := r.Cookie("session")
 	if err != nil {
@@ -75,6 +79,7 @@ func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+// IsLoggedIn - check if a session cookie exists and if the user and the session wxists in DB
 func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("session")
 	if err != nil {
@@ -95,6 +100,7 @@ func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
+// Signup - create a new user from the form
 func Signup(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -152,6 +158,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+// Login - login and create session from the user login page
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -202,6 +209,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Logout user and delete session cookie
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if !IsLoggedIn(w, r) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -215,13 +223,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
-func Protected(h http.HandlerFunc) http.HandlerFunc {
+// Protected - a middleware to protect routes
+func Protected(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ok := IsLoggedIn(w, r)
 		if !ok {
 			http.Redirect(w, r, "/login", http.StatusUnauthorized)
 			return
 		}
-		h(w, r)
+		next(w, r)
 	}
 }
