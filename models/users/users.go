@@ -4,12 +4,21 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"web/auth"
 	"web/database"
 	"web/utils"
 
 	"github.com/gorilla/mux"
 )
+
+// User struct
+type User struct {
+	ID       int
+	Name     string
+	Surname  string
+	Email    string
+	Password []byte
+	Role     int
+}
 
 // GetUsers get all active users from DB
 func GetUsers(w http.ResponseWriter, r *http.Request) {
@@ -22,9 +31,9 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
-	urs := make([]auth.User, 0)
+	urs := make([]User, 0)
 	for rows.Next() {
-		us := auth.User{}
+		us := User{}
 		err := rows.Scan(&us.ID, &us.Name, &us.Surname, &us.Email, &us.Password, &us.Role)
 		if err != nil {
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -50,7 +59,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	row := database.Db.QueryRow("SELECT name, surname, email, role FROM users where id = $1", param)
 
-	us := auth.User{}
+	us := User{}
 	err := row.Scan(&us.Name, &us.Surname, &us.Email, &us.Role)
 	switch {
 	case err == sql.ErrNoRows:

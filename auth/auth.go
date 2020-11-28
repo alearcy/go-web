@@ -6,21 +6,12 @@ import (
 	"time"
 	"web/database"
 	"web/forms"
+	"web/models/users"
 	"web/utils"
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
-
-// User struct
-type User struct {
-	ID       int
-	Name     string
-	Surname  string
-	Email    string
-	Password []byte
-	Role     int
-}
 
 type session struct {
 	ID        int
@@ -36,7 +27,7 @@ func generateUUID() (string, error) {
 }
 
 // GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
-func GenerateSession(w http.ResponseWriter, user User, remember string) (bool, error) {
+func GenerateSession(w http.ResponseWriter, user users.User, remember string) (bool, error) {
 	uuID, _ := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
@@ -124,7 +115,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 		//controllare se l'utente esiste prima di continuare
 		row := database.Db.QueryRow("SELECT * FROM users WHERE email = $1", email)
-		u := User{}
+		u := users.User{}
 		err := row.Scan(&u.ID)
 		if err != nil {
 			if password != password2 {
@@ -137,7 +128,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			u := User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
+			u := users.User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
 			_, err = database.Db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
 				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
@@ -178,7 +169,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 		//controllo se l'utente esiste prima di continuare
 		row := database.Db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
-		u := User{}
+		u := users.User{}
 		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 		switch {
 		case err == sql.ErrNoRows:

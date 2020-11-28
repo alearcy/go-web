@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"web/auth"
 	"web/database"
-	"web/entities/users"
+	"web/models/users"
 	"web/pages"
 )
 
