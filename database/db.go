@@ -1,36 +1,41 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
+	_ "database/sql"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
-// Db - the db instance
-var Db *sql.DB
-
-// StartDb - db initialization function
-func StartDb() {
+// CallDb - db initialization function
+func CallDb() *mongo.Database {
 	viper.SetConfigFile(".env")
-	var err error
-	err = viper.ReadInConfig()
+	//var err error
+	//var cancel context.CancelFunc
+	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Error while reading config file %s", err)
 	}
-	dbName, _ := viper.Get("DB_NAME").(string)
-	dbUser, _ := viper.Get("DB_USER").(string)
 	dbHost, _ := viper.Get("DB_HOST").(string)
-	dbPwd, _ := viper.Get("DB_PWD").(string)
-	dbPath := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbUser, dbPwd, dbHost, dbName)
-	Db, err = sql.Open("pgx", dbPath)
+	dbName, _ := viper.Get("DB_NAME").(string)
+	client, err := mongo.NewClient(options.Client().ApplyURI(dbHost))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	err = Db.Ping()
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
-	fmt.Println("Connected to the DB")
+	//defer client.Disconnect(Ctx)
+	err = client.Ping(ctx, readpref.Primary())
+	if err != nil {
+		log.Fatal(err)
+	}
+	return client.Database(dbName)
 }

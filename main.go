@@ -5,14 +5,9 @@ import (
 	"log"
 	"net/http"
 	"web/auth"
-	"web/database"
-	"web/models/users"
+	"web/models"
 	"web/pages"
 )
-
-func init() {
-	database.StartDb()
-}
 
 func main() {
 	files := http.FileServer(http.Dir("./static"))
@@ -21,8 +16,8 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/", pages.Index)
 	r.HandleFunc("/dashboard", auth.Protected(pages.Dashboard))
-	r.HandleFunc("/users", auth.Protected(users.GetUsers))
-	r.HandleFunc("/users/{id:[0-9]+}", auth.Protected(users.GetUser))
+	r.HandleFunc("/users", auth.Protected(models.GetUsers))
+	r.HandleFunc("/users/{id:[0-9]+}", auth.Protected(models.GetUser))
 	r.HandleFunc("/users/create", auth.Signup)
 	r.HandleFunc("/login", auth.Login)
 	r.HandleFunc("/logout", auth.Logout)

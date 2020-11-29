@@ -1,12 +1,14 @@
 package auth
 
 import (
-	"database/sql"
+	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
 	"web/database"
 	"web/forms"
-	"web/models/users"
+	"web/models"
 	"web/utils"
 
 	uuid "github.com/satori/go.uuid"
@@ -14,10 +16,10 @@ import (
 )
 
 type session struct {
-	ID        int
-	sessionID string
-	userID    int
-	createdAt time.Time
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	SessionID string             `json:"sessionID,omitempty" bson:"sessionID,omitempty"`
+	UserID    primitive.ObjectID `json:"userID,omitempty" bson:"userID,omitempty"`
+	CreatedAt time.Time          `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 }
 
 func generateUUID() (string, error) {
@@ -26,8 +28,8 @@ func generateUUID() (string, error) {
 	return sIDs, nil
 }
 
-// GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
-func GenerateSession(w http.ResponseWriter, user users.User, remember string) (bool, error) {
+// GenerateSession - generate a new session passing the ResponseWriter, the user and the remember option
+func GenerateSession(w http.ResponseWriter, user models.User, remember string) (bool, error) {
 	uuID, _ := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
@@ -41,8 +43,12 @@ func GenerateSession(w http.ResponseWriter, user users.User, remember string) (b
 		// scade dopo un anno, altrimenti a ogni nuova sessione
 		c.Expires = time.Now().Add(365 * 24 * time.Hour)
 	}
-	s := session{sessionID: uuID, userID: user.ID, createdAt: time.Now()}
-	_, err := database.Db.Exec("insert into sessions (uuId, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
+	s := session{SessionID: uuID, UserID: user.ID, CreatedAt: time.Now()}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := database.CallDb().Collection("sessions")
+	_, err := collection.InsertOne(ctx, s)
+
 	if err != nil {
 		utils.Flash(w, "Non è stato possibile creare la sessione utente, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -58,9 +64,12 @@ func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	if err != nil {
 		return err
 	}
-	_, err = database.Db.Exec("DELETE FROM sessions WHERE uuid = $1", c.Value)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := database.CallDb().Collection("sessions")
+	_, err = collection.DeleteOne(ctx, bson.M{"sessionID": c.Value})
 	if err != nil {
-		utils.Flash(w, "Non è stato possibile sloggare l'utente.")
+		utils.Flash(w, "Non è stato possibile eseguire il logout dell'utente.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
@@ -70,7 +79,7 @@ func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// IsLoggedIn - check if a session cookie exists and if the user and the session wxists in DB
+// IsLoggedIn - check if a session cookie exists and if the user and the session wxists in CallDb()
 func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	c, err := r.Cookie("session")
 	if err != nil {
@@ -78,17 +87,17 @@ func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 	// cerco nella tabella sessions se esiste quella con sessionID del cookie
-	rows, err := database.Db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
+	var s session
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := database.CallDb().Collection("sessions")
+	err = collection.FindOne(ctx, bson.M{"sessionID": c.Value}).Decode(&s)
 	if err != nil {
-		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.")
+		utils.Flash(w, "Non è stato possibile interrogare il CallDb(), riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false
 	}
-	if rows.Next() {
-		// ho trovato una sessione con il sessionID del cookie quindi sono loggato
-		return true
-	}
-	return false
+	return true
 }
 
 // Signup - create a new user from the form
@@ -99,6 +108,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		surname := r.FormValue("surname")
 		password := r.FormValue("password")
 		password2 := r.FormValue("password2")
+
+		if password != password2 {
+			utils.Flash(w, "Le due password non coincidono")
+			http.Redirect(w, r, "/users/create", http.StatusSeeOther)
+			return
+		}
 
 		sf := &forms.SignupForm{
 			Email:     email,
@@ -114,32 +129,34 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//controllare se l'utente esiste prima di continuare
-		row := database.Db.QueryRow("SELECT * FROM users WHERE email = $1", email)
-		u := users.User{}
-		err := row.Scan(&u.ID)
+		var u models.User
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		collection := database.CallDb().Collection("users")
+		err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&u)
+
 		if err != nil {
-			if password != password2 {
-				utils.Flash(w, "Le due password non coincidono")
-				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
-				return
-			}
 			cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			u := users.User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
-			_, err = database.Db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
+			u := models.User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
+			_, err = collection.InsertOne(ctx, u)
 			if err != nil {
-				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
+				utils.Flash(w, "Non è stato possibile salvare a database, riprova.")
 				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
+		} else {
+			utils.Flash(w, "Utente già esistente.")
+			http.Redirect(w, r, "/users/create", http.StatusSeeOther)
+			return
 		}
-		utils.Flash(w, "Utente già esistente")
-		http.Redirect(w, r, "/users/create", http.StatusSeeOther)
+
 	}
 	if !IsLoggedIn(w, r) {
 		utils.GenerateHTML(w, r, nil, "layout", "signup")
@@ -168,16 +185,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//controllo se l'utente esiste prima di continuare
-		row := database.Db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
-		u := users.User{}
-		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
-		switch {
-		case err == sql.ErrNoRows:
+		var u models.User
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		collection := database.CallDb().Collection("users")
+		err := collection.FindOne(ctx, bson.M{"email": email}).Decode(&u)
+		if err != nil {
 			utils.Flash(w, "Nome utente errato o non esistente.")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		case err != nil:
-			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
