@@ -66,3 +66,31 @@ func (s *SignupForm) Validate() bool {
 
 	return len(s.Errors) == 0
 }
+
+// MenuForm create menu form struct
+type MenuForm struct {
+	Name        string
+	CompanyName string
+	Address     string
+	PIva        string
+	Errors      map[string]string
+}
+
+// Validate signup form
+func (s *MenuForm) Validate() bool {
+	s.Errors = make(map[string]string)
+	if strings.TrimSpace(s.Name) == "" {
+		s.Errors["Name"] = "Campo obbligatorio"
+	}
+	if strings.TrimSpace(s.CompanyName) == "" {
+		s.Errors["CompanyName"] = "Campo obbligatorio"
+	}
+	if strings.TrimSpace(s.Address) == "" {
+		s.Errors["Address"] = "Campo obbligatorio"
+	}
+	if strings.TrimSpace(s.PIva) == "" {
+		s.Errors["PIva"] = "Campo obbligatorio"
+	}
+
+	return len(s.Errors) == 0
+}

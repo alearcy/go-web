@@ -21,6 +21,8 @@ func main() {
 	r.HandleFunc("/users/create", auth.Signup)
 	r.HandleFunc("/login", auth.Login)
 	r.HandleFunc("/logout", auth.Logout)
+	r.HandleFunc("/createMenu", auth.Protected(models.CreateMenu))
+	r.HandleFunc("/menus", auth.Protected(models.ListMenu))
 	log.Println("Listening on localhost:8000...")
 	err := http.ListenAndServe(":8000", r)
 	if err != nil {

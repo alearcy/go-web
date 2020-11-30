@@ -1,0 +1,30 @@
+{{define "content"}}
+    <main class="px-4">
+        <div class="container mx-auto">
+            <h1 class="title is-1 has-text-centered">Crea menu</h1>
+            <form method="POST" novalidate class="box">
+                <input type="text" name="Name" autofocus placeholder="Nome" />
+                {{with .Errors.Name}}
+                    <p>{{.}}</p>
+                {{end}}
+                <input type="text" name="LogoUrl" placeholder="Logo" />
+                {{with .Errors.LogoUrl}}
+                    <p>{{.}}</p>
+                {{end}}
+                <input type="text" name="CompanyName" placeholder="Nome azienda" />
+                {{with .Errors.CompanyName}}
+                    <p>{{.}}</p>
+                {{end}}
+                <input type="text" name="Address" placeholder="Indirizzo" />
+                {{with .Errors.Address}}
+                    <p>{{.}}</p>
+                {{end}}
+                <input type="text" name="PIva" placeholder="Partita Iva" />
+                {{with .Errors.PIva}}
+                    <p>{{.}}</p>
+                {{end}}
+                <input type="submit" value="Crea" />
+            </form>
+        </div>
+    </main>
+{{end}}
