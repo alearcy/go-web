@@ -1,8 +1,7 @@
 {{define "content"}}
 <ul>
     {{range .}}
-    <li>{{.Email}}</li>
-    {{if eq .Role 0}} Sono admin {{end}}
+    <li>{{.Title}}</li>
     {{end}}
 </ul>
 {{end}}

@@ -5,11 +5,45 @@ import (
 	"fmt"
 	"log"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 )
 
 // Db - the db instance
 var Db *sql.DB
+
+const statment string = `
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER,
+    uuid TEXT NOT NULL UNIQUE, 
+    user_id INTEGER NOT NULL UNIQUE, 
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL,
+    role INT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id)
+);
+
+CREATE TABLE IF NOT EXISTS songs (
+    id INTEGER,
+    title TEXT NOT NULL,
+    image TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    userId INTEGER NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id),
+    FOREIGN KEY(userId) REFERENCES users(id)
+);`
 
 // StartDb - db initialization function
 func StartDb() {
@@ -19,12 +53,12 @@ func StartDb() {
 	if err != nil {
 		log.Fatalf("Error while reading config file %s", err)
 	}
-	dbName, _ := viper.Get("DB_NAME").(string)
-	dbUser, _ := viper.Get("DB_USER").(string)
-	dbHost, _ := viper.Get("DB_HOST").(string)
-	dbPwd, _ := viper.Get("DB_PWD").(string)
-	dbPath := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbUser, dbPwd, dbHost, dbName)
-	Db, err = sql.Open("pgx", dbPath)
+	// dbName, _ := viper.Get("DB_NAME").(string)
+	// dbUser, _ := viper.Get("DB_USER").(string)
+	// dbHost, _ := viper.Get("DB_HOST").(string)
+	// dbPwd, _ := viper.Get("DB_PWD").(string)
+	// dbPath := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", dbUser, dbPwd, dbHost, dbName)
+	Db, err = sql.Open("sqlite3", "./database.db")
 	if err != nil {
 		panic(err)
 	}
@@ -32,5 +66,6 @@ func StartDb() {
 	if err != nil {
 		panic(err)
 	}
+	Db.Exec(statment)
 	fmt.Println("Connected to the DB")
 }

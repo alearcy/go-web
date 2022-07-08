@@ -24,7 +24,7 @@ func GenerateHTML(w http.ResponseWriter, r *http.Request, data interface{}, file
 
 	var a []string
 	for _, f := range files {
-		a = append(a, fmt.Sprintf("templates/%s.html", f))
+		a = append(a, fmt.Sprintf("templates/%s.gohtml", f))
 	}
 	// template.Must si occupa lui di fare l'error checking senza essere ripetitivi e accetta un template come argomento
 	// template.PareGlob prende tutti i template dentro una cartella mentre template.ParseFiles uno alla volta dentro slice

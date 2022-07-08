@@ -7,9 +7,7 @@ import (
 
 // Index is the main web page
 func Index(w http.ResponseWriter, r *http.Request) {
-	// example values
-	music := []string{"pop", "rock", "rap", "metal", "classical"}
-	utils.GenerateHTML(w, r, music, "layout", "index")
+	utils.GenerateHTML(w, r, nil, "layout", "index")
 }
 
 // Dashboard is where user can see his data

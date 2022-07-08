@@ -1,20 +1,31 @@
-DROP TABLE IF EXISTS users;
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER,
+    uuid TEXT NOT NULL UNIQUE, 
+    user_id INTEGER NOT NULL UNIQUE, 
+    created_at DATETIME NOT NULL,
+    PRIMARY KEY(id)
+);
 
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER,
+    name TEXT NOT NULL,
+    surname TEXT NOT NULL,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL,
+    role INT NOT NULL DEFAULT 1,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id)
+);
 
-DROP TABLE IF EXISTS sessions;
-
-
-CREATE TABLE sessions ( id serial PRIMARY KEY,
-                                          uuid VARCHAR(64) NOT NULL UNIQUE,
-                                                                    user_id INTEGER NOT NULL UNIQUE,
-                                                                                             created_at TIMESTAMP NOT NULL);
-
-
-CREATE TABLE users ( id SERIAL PRIMARY KEY,
-                                       name VARCHAR(255) NOT NULL,
-                                                         surname VARCHAR(255) NOT NULL,
-                                                                              email VARCHAR(255) NOT NULL,
-                                                                                                 password VARCHAR(255) NOT NULL,
-                                                                                                                       role INT NOT NULL DEFAULT 1,
-                                                                                                                                                 created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-                                                                                                                                                                                       updated_at TIMESTAMP NOT NULL DEFAULT NOW());
+CREATE TABLE IF NOT EXISTS songs (
+    id INTEGER,
+    title TEXT NOT NULL,
+    image TEXT NOT NULL,
+    filename TEXT NOT NULL,
+    userId INTEGER NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(id),
+    FOREIGN KEY(userId) REFERENCES users(id)
+);

@@ -1,5 +1,5 @@
 module.exports = {
-  purge: ["./templates/**/*.html"],
+  purge: ["./templates/**/*.gohtml"],
   theme: {
     extend: {},
   },

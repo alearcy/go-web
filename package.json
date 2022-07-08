@@ -4,7 +4,8 @@
   "description": "Con `go run main.go > index.html` genero un file html eseguibile.",
   "main": "index.js",
   "scripts": {
-    "start": "npx tailwindcss build static/css/main.css -o static/css/output.css"
+    "start": "npx tailwindcss build static/css/main.css -o static/css/output.css",
+    "minify": "npx tailwindcss -o static/css/output.css --minify"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,6 @@
   },
   "homepage": "https://github.com/alearcy/go-web#readme",
   "dependencies": {
-    "tailwindcss": "^1.8.3"
+    "tailwindcss": "^3.1.5"
   }
 }

@@ -2,11 +2,12 @@ package auth
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"time"
 	"web/database"
 	"web/forms"
-	"web/models/users"
+	model "web/models"
 	"web/utils"
 
 	uuid "github.com/satori/go.uuid"
@@ -27,7 +28,7 @@ func generateUUID() (string, error) {
 }
 
 // GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
-func GenerateSession(w http.ResponseWriter, user users.User, remember string) (bool, error) {
+func GenerateSession(w http.ResponseWriter, user model.User, remember string) (bool, error) {
 	uuID, _ := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
@@ -60,7 +61,8 @@ func DeleteCookie(w http.ResponseWriter, r *http.Request) error {
 	}
 	_, err = database.Db.Exec("DELETE FROM sessions WHERE uuid = $1", c.Value)
 	if err != nil {
-		utils.Flash(w, "Non è stato possibile sloggare l'utente.")
+		fmt.Println(err)
+		utils.Flash(w, "Non è stato possibile fare il logout dell'utente.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return err
 	}
@@ -80,15 +82,14 @@ func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	// cerco nella tabella sessions se esiste quella con sessionID del cookie
 	rows, err := database.Db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
 	if err != nil {
+		fmt.Println(err)
 		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false
 	}
-	if rows.Next() {
-		// ho trovato una sessione con il sessionID del cookie quindi sono loggato
-		return true
-	}
-	return false
+	defer rows.Close()
+	// ho trovato una sessione con il sessionID del cookie quindi sono loggato
+	return rows.Next()
 }
 
 // Signup - create a new user from the form
@@ -115,7 +116,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 		//controllare se l'utente esiste prima di continuare
 		row := database.Db.QueryRow("SELECT * FROM users WHERE email = $1", email)
-		u := users.User{}
+		u := model.User{}
 		err := row.Scan(&u.ID)
 		if err != nil {
 			if password != password2 {
@@ -128,9 +129,10 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			u := users.User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
+			u := model.User{Name: name, Surname: surname, Email: email, Password: cryptedPassword, Role: 1}
 			_, err = database.Db.Exec("insert into users (name, surname, email, password, role) values ($1, $2, $3, $4, $5)", &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 			if err != nil {
+				fmt.Println(err)
 				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
 				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
 				return
@@ -169,7 +171,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 		//controllo se l'utente esiste prima di continuare
 		row := database.Db.QueryRow("SELECT id, name, surname, email, password, role FROM users WHERE email = $1", email)
-		u := users.User{}
+		u := model.User{}
 		err := row.Scan(&u.ID, &u.Name, &u.Surname, &u.Email, &u.Password, &u.Role)
 		switch {
 		case err == sql.ErrNoRows:
