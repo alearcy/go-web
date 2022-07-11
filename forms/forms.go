@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var rxEmail = regexp.MustCompile(".+@.+\\..+")
+var rxEmail = regexp.MustCompile(`.+@.+\\..+`)
 
 // LoginForm create login form struct
 type LoginForm struct {
@@ -19,7 +19,7 @@ type LoginForm struct {
 func (l *LoginForm) Validate() bool {
 	l.Errors = make(map[string]string)
 	match := rxEmail.Match([]byte(l.Email))
-	if match == false {
+	if !match {
 		l.Errors["Email"] = "Inserisci un indirizzo email valido"
 	}
 	if strings.TrimSpace(l.Email) == "" {
@@ -45,7 +45,7 @@ type SignupForm struct {
 func (s *SignupForm) Validate() bool {
 	s.Errors = make(map[string]string)
 	match := rxEmail.Match([]byte(s.Email))
-	if match == false {
+	if !match {
 		s.Errors["Email"] = "Inserisci un indirizzo email valido"
 	}
 	if strings.TrimSpace(s.Email) == "" {
@@ -62,6 +62,9 @@ func (s *SignupForm) Validate() bool {
 	}
 	if strings.TrimSpace(s.Surname) == "" {
 		s.Errors["Surname"] = "Campo obbligatorio"
+	}
+	if strings.TrimSpace(s.Password) != strings.TrimSpace(s.Password2) {
+		s.Errors["Password2"] = "Le due password non coincidono"
 	}
 
 	return len(s.Errors) == 0
