@@ -66,6 +66,9 @@ func StartDb() {
 	if err != nil {
 		panic(err)
 	}
-	Db.Exec(statment)
+	_, err = Db.Exec(statment)
+	if err != nil {
+		panic(err)
+	}
 	fmt.Println("Connected to the DB")
 }
