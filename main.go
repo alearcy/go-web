@@ -1,12 +1,19 @@
 package main
 
 import (
+	"embed"
 	"log"
 	"net/http"
 	"web/auth"
 	"web/database"
 	model "web/models"
 	"web/pages"
+	"web/utils"
+)
+
+var (
+	//go:embed templates/* templates/layouts/*.gohtml
+	files embed.FS
 )
 
 func init() {
@@ -14,6 +21,7 @@ func init() {
 }
 
 func main() {
+	utils.GenerateTemplatesFromFiles(files)
 	mux := http.NewServeMux()
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
@@ -31,3 +39,5 @@ func main() {
 		log.Fatal(err)
 	}
 }
+
+// TODO; 404, 500, 401 pages, html errors header

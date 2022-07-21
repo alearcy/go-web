@@ -1,25 +1,28 @@
+{{template "main" .}}
 {{define "content"}}
-<main class="container mx-auto">
-  <h1>Crea utente</h1>
-  <form method="POST" novalidate class="box">
-    <input type="name" name="name" autofocus placeholder="Nome" />
-    {{with .Errors.Name}}
-    <p>{{.}}</p>
+<h1>Crea utente</h1>
+<form method="POST" novalidate class="box">
+  <fieldset>
+    <label for="name">Name</label>
+    <input id="name" type="text" name="name" autofocus placeholder="Nome" />
+    <label for="surname">Surname</label>
+    <input id="surname" type="text" name="surname" placeholder="Cognome" />
+    <label for="email">Email*</label>
+    <input id="email" type="email" name="email" placeholder="Email" />
+    {{with .Errors.Email}}
+    <div class="form-error">{{.}}</div>
     {{end}}
-    <input type="surname" name="surname" placeholder="Cognome" />
-    {{with .Errors.Surname}}
-    <p>{{.}}</p>
-    {{end}}
-    <input type="email" name="email" placeholder="Email" />
+    <label for="password">Password*</label>
+    <input id="password" type="password" name="password" placeholder="Password" />
     {{with .Errors.Password}}
-    <p>{{.}}</p>
+    <div class="form-error">{{.}}</div>
     {{end}}
-    <input type="password" name="password" placeholder="Password" />
+    <label for="password2">Retype password*</label>
+    <input id="password2" type="password" name="password2" placeholder="Password di conferma" />
     {{with .Errors.Password2}}
-    <p>{{.}}</p>
+    <div class="form-error">{{.}}</div>
     {{end}}
-    <input type="password" name="password2" placeholder="Password di conferma" />
-    <input type="submit" value="Crea" />
-  </form>
-</main>
+    <input type="submit" class="button-primary" value="Crea utente" />
+  </fieldset>
+</form>
 {{end}}

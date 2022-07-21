@@ -27,7 +27,7 @@ func GetSongs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	songs := make([]Song, 0)
-	rows.Close()
+	defer rows.Close()
 	for rows.Next() {
 		song := Song{}
 		err := rows.Scan(&song.ID, &song.Title, &song.UserId, &song.Image, &song.Filename)
@@ -41,7 +41,7 @@ func GetSongs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
-	utils.GenerateHTML(w, r, songs, "layout", "songs")
+	utils.ExecTemplate(w, r, songs, "songs.gohtml")
 }
 
 // GetUser get a single user from thd DB passing the known ID

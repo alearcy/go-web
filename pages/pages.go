@@ -1,17 +1,23 @@
 package pages
 
 import (
+	"fmt"
 	"net/http"
 	"web/utils"
 )
 
 // Index is the main web page
 func Index(w http.ResponseWriter, r *http.Request) {
-	utils.GenerateHTML(w, r, nil, "layout", "index")
+	if err := utils.ExecTemplate(w, r, nil, "index.gohtml"); err != nil {
+		fmt.Println(err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 }
 
 // Dashboard is where user can see his data
 func Dashboard(w http.ResponseWriter, r *http.Request) {
+	// TODO: creare una data struct con cookie e T per data
 	c, _ := r.Cookie("session")
-	utils.GenerateHTML(w, r, c.Value, "layout", "dashboard")
+	utils.ExecTemplate(w, r, c, "dashboard.gohtml")
 }

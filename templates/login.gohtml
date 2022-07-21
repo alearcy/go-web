@@ -1,37 +1,25 @@
+{{template "main" .}}
 {{define "content"}}
-<main class="container mx-auto">
-  <h1>Login</h1>
-  <form method="POST" novalidate>
-    <div class="field">
-      <label class="label">Email</label>
-      <div class="control">
-        <input class="input" type="email" name="email" placeholder="Email" autofocus />
-      </div>
-      {{with .Errors.Email}}
-      <p class="help is-danger">{{.}}</p>
-      {{end}}
-    </div>
-    <div class="field">
-      <label class="label">Password</label>
-      <div class="control">
-        <input class="input" type="password" name="password" placeholder="Password" />
-      </div>
-      {{with .Errors.Password}}
-      <p class="help is-danger">{{.}}</p>
-      {{end}}
-    </div>
-    <div class="field">
-      <div class="control">
-        <label class="label"><input class="checkbox" type="checkbox" name="remember" value="remember" />
-          Ricordami
-        </label>
+<h1>Login</h1>
+<form method="POST" novalidate>
+  <fieldset>
+    <label for="email">Email*</label>
+    <input id="email" type="email" name="email" placeholder="Email" autofocus />
+    {{with .Errors.Email}}
+    <div class="form-error">{{.}}</div>
+    {{end}}
+    <label for="password">Password*</label>
+    <input id="password" class="input" type="password" name="password" placeholder="Password" />
+    {{with .Errors.Password}}
+    <div class="form-error">{{.}}</div>
+    {{end}}
+    <div class="clearfix">
+      <div class="float-left">
+        <label for="remember" class="label-inline">Ricordami</label>
+        <input id="remember" type="checkbox" name="remember" value="remember" />
       </div>
     </div>
-    <div class="field">
-      <div class="control">
-        <input class="button is-primary" type="submit" value="Entra" />
-      </div>
-    </div>
-  </form>
-</main>
+    <input class="button button-primary" type="submit" value="Entra" />
+  </fieldset>
+</form>
 {{end}}

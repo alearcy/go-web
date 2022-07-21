@@ -1,0 +1,105 @@
+body {
+    font-family: 'Lato', serif;
+    margin: 0;
+    padding: 0;
+}
+
+.form-error {
+    color: rgba(255, 79, 79, 0.894);
+    font-size: .8em;
+    margin-top: -12px;
+    margin-bottom: 6px;
+}
+
+.container {
+    width: 100%;
+    padding: 20px;
+}
+
+.button,
+button,
+input[type='button'],
+input[type='reset'],
+input[type='submit'],
+.button-primary {
+    background-color: aquamarine;
+    border-color: #606c76;
+    color: #606c76;
+}
+
+input[type='button'],
+input[type='submit'],
+input[type='submit'],
+.button,
+input[type='button'].button {
+    margin-top: 8px;
+}
+
+input[type='color']:focus,
+input[type='date']:focus,
+input[type='datetime']:focus,
+input[type='datetime-local']:focus,
+input[type='email']:focus,
+input[type='month']:focus,
+input[type='number']:focus,
+input[type='password']:focus,
+input[type='search']:focus,
+input[type='tel']:focus,
+input[type='text']:focus,
+input[type='url']:focus,
+input[type='week']:focus,
+input:not([type]):focus,
+textarea:focus,
+select:focus {
+    border-color: #606c76;
+    outline: 0;
+}
+
+form {
+    width: 100%;
+}
+
+header {
+    height: 80px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background-color: #ececec;
+}
+
+header nav {
+    order: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header nav>a {
+    margin-left: 9px;
+    text-decoration: none;
+    color: #606c76;
+}
+
+header .logo {
+    order: 1;
+    text-decoration: none;
+    color: #606c76;
+    font-weight: 700;
+}
+
+@media screen and (min-width: 40em) {
+    .container {
+        width: 80%;
+    }
+
+    form {
+        width: 60%;
+        margin: 0 auto;
+    }
+
+    h1 {
+        text-align: center;
+    }
+}

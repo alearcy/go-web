@@ -57,12 +57,6 @@ func (s *SignupForm) Validate() bool {
 	if strings.TrimSpace(s.Password2) == "" {
 		s.Errors["Password2"] = "Campo obbligatorio"
 	}
-	if strings.TrimSpace(s.Name) == "" {
-		s.Errors["Name"] = "Campo obbligatorio"
-	}
-	if strings.TrimSpace(s.Surname) == "" {
-		s.Errors["Surname"] = "Campo obbligatorio"
-	}
 	if strings.TrimSpace(s.Password) != strings.TrimSpace(s.Password2) {
 		s.Errors["Password2"] = "Le due password non coincidono"
 	}

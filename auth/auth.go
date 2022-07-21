@@ -21,22 +21,22 @@ type session struct {
 	createdAt time.Time
 }
 
-func generateUUID() (string, error) {
+func generateUUID() string {
 	sID := uuid.NewV4()
 	sIDs := sID.String()
-	return sIDs, nil
+	return sIDs
 }
 
 // GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
 func GenerateSession(w http.ResponseWriter, user model.User, remember string) (bool, error) {
-	uuID, _ := generateUUID()
+	uuID := generateUUID()
 	c := http.Cookie{
 		Name:     "session",
 		Value:    uuID,
 		HttpOnly: true,
 		Path:     "/",
 		// solo HTTPS
-		// Secure: true
+		// Secure: true TODO: aggiungere da file env se è dev o prod e mettere o meno https
 	}
 	if remember == "remember" {
 		// scade dopo un anno, altrimenti a ogni nuova sessione
@@ -44,6 +44,7 @@ func GenerateSession(w http.ResponseWriter, user model.User, remember string) (b
 	}
 	s := session{sessionID: uuID, userID: user.ID, createdAt: time.Now()}
 	_, err := database.Db.Exec("insert into sessions (uuId, user_id, created_at) values ($1, $2, $3)", &s.sessionID, &s.userID, &s.createdAt)
+	// TODO: rendere generica la gestione degli errori con relativo flash message e fmt.Errorf
 	if err != nil {
 		utils.Flash(w, "Non è stato possibile creare la sessione utente, riprova.")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,7 +84,7 @@ func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	rows, err := database.Db.Query("SELECT * FROM sessions where uuid = $1", c.Value)
 	if err != nil {
 		fmt.Println(err)
-		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.")
+		utils.Flash(w, "Non è stato possibile interrogare il DB, riprova.") // TODO: il flash si vede o viene cancellato dall'http error??
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return false
 	}
@@ -110,7 +111,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := sf.Validate(); !ok {
-			utils.GenerateHTML(w, r, sf, "layout", "signup")
+			utils.ExecTemplate(w, r, sf, "signup.gohtml")
 			return
 		}
 
@@ -119,11 +120,6 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		u := model.User{}
 		err := row.Scan(&u.ID)
 		if err != nil {
-			if password != password2 {
-				utils.Flash(w, "Le due password non coincidono")
-				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
-				return
-			}
 			cryptedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.MinCost)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -134,17 +130,17 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Println(err)
 				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
-				http.Redirect(w, r, "/users/create", http.StatusSeeOther)
+				http.Redirect(w, r, "/signup", http.StatusSeeOther)
 				return
 			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 		utils.Flash(w, "Utente già esistente")
-		http.Redirect(w, r, "/users/create", http.StatusSeeOther)
+		http.Redirect(w, r, "/signup", http.StatusSeeOther)
 	}
 	if !IsLoggedIn(w, r) {
-		utils.GenerateHTML(w, r, nil, "layout", "signup")
+		utils.ExecTemplate(w, r, nil, "signup.gohtml")
 		return
 	}
 	utils.Flash(w, "Risulti già loggato!")
@@ -165,7 +161,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := lf.Validate(); !ok {
-			utils.GenerateHTML(w, r, lf, "layout", "login")
+			utils.ExecTemplate(w, r, lf, "login.gohtml")
 			return
 		}
 
@@ -197,7 +193,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 			return
 		}
-		utils.GenerateHTML(w, r, nil, "layout", "login")
+		utils.ExecTemplate(w, r, nil, "login.gohtml")
 		return
 	}
 }
