@@ -22,15 +22,15 @@
       <a href="/signup">signup</a>
     </nav>
   </header>
-  {{if .FlashMessages}}
-  <div class="container mx-auto">
-    <div class="bg-red-400 rounded-sm">
-      <button onclick="closeNotification()"></button>
-      {{ .FlashMessages }}
-    </div>
-  </div>
-  {{end}}
   <main class="container">
+    {{if .FlashMessages}}
+    <div class="notification error">
+      <div class="close" onclick="closeNotification()">X</div>
+      <div class="text">
+        {{ .FlashMessages }}
+      </div>
+    </div>
+    {{end}}
     {{template "content" .Data}}
   </main>
   <script src="/static/js/main.js"></script>

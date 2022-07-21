@@ -130,21 +130,21 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				fmt.Println(err)
 				utils.Flash(w, "Non è stato possibile salvare a DB, riprova.")
-				http.Redirect(w, r, "/signup", http.StatusSeeOther)
+				http.Redirect(w, r, "/signup", http.StatusFound)
 				return
 			}
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 		utils.Flash(w, "Utente già esistente")
-		http.Redirect(w, r, "/signup", http.StatusSeeOther)
+		http.Redirect(w, r, "/signup", http.StatusFound)
 	}
 	if !IsLoggedIn(w, r) {
 		utils.ExecTemplate(w, r, nil, "signup.gohtml")
 		return
 	}
 	utils.Flash(w, "Risulti già loggato!")
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // Login - login and create session from the user login page
@@ -172,7 +172,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case err == sql.ErrNoRows:
 			utils.Flash(w, "Nome utente errato o non esistente.")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		case err != nil:
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
@@ -181,16 +181,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		err = bcrypt.CompareHashAndPassword(u.Password, []byte(password))
 		if err != nil {
 			utils.Flash(w, "Password non valida")
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			http.Redirect(w, r, "/login", http.StatusFound)
 			return
 		}
 		if ok, _ := GenerateSession(w, u, remember); ok {
-			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
 		}
 	}
 	if r.Method == http.MethodGet {
 		if IsLoggedIn(w, r) {
-			http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+			http.Redirect(w, r, "/dashboard", http.StatusFound)
 			return
 		}
 		utils.ExecTemplate(w, r, nil, "login.gohtml")
@@ -201,7 +201,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // Logout user and delete session cookie
 func Logout(w http.ResponseWriter, r *http.Request) {
 	if !IsLoggedIn(w, r) {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 	err := DeleteCookie(w, r)
@@ -209,16 +209,16 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
-// Protected - a middleware to protect routes
+// Protected - a middleware to protect routes from unauthenticated users
 func Protected(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ok := IsLoggedIn(w, r)
 		if !ok {
-			http.Redirect(w, r, "/login", http.StatusUnauthorized)
-			return
+			utils.Flash(w, "Devi essere loggato.")
+			http.Redirect(w, r, "/login", http.StatusFound)
 		}
 		next(w, r)
 	}
