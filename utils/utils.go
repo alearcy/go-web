@@ -1,44 +1,46 @@
 package utils
 
 import (
-	"embed"
 	"encoding/base64"
-	"errors"
 	"fmt"
-	"io/fs"
+	"html/template"
+	"log"
 	"net/http"
-	"text/template"
+	"os"
+	"strings"
 	"time"
 )
 
 const (
-	layoutsDir   = "templates/layouts"
-	templatesDir = "templates"
-	extension    = "/*.gohtml"
+	LayoutTemplatesFolder = "templates/layouts"
+	AdminTemplatesFolder  = "templates/admin"
+	TemplatesFolder       = "templates"
 )
 
-var pages map[string]*template.Template
+// GenerateTemplate generate templates based on data and html
+func GenerateTemplate(w http.ResponseWriter, r *http.Request, data any, fileName string) error {
+	var layoutType string
+	flashMessages, _ := ShowFlash(w, r)
+	dataWithFlashMsgs := map[string]interface{}{
+		"FlashMessages": flashMessages,
+		"Data":          data,
+	}
 
-// GenerateTemplatesFromFiles generate templates based on data and html
-func GenerateTemplatesFromFiles(files embed.FS) error {
-	if pages == nil {
-		pages = make(map[string]*template.Template)
+	split := strings.Split(r.URL.Path, string(os.PathSeparator))
+	level := split[1]
+	fmt.Println(level)
+	if level != "" {
+		layoutType = fmt.Sprintf("templates/%s/", level)
+	} else {
+		layoutType = "templates"
 	}
-	templates, err := fs.ReadDir(files, templatesDir)
+	formatteLayoutdUrl := fmt.Sprintf("%s/base.gohtml", layoutType)
+	formatteTemmplateUrl := fmt.Sprintf("%s/%s.gohtml", layoutType, fileName)
+	templates := template.Must(template.ParseFiles(formatteTemmplateUrl, formatteLayoutdUrl))
+	fmt.Println(templates.Name())
+	err := templates.Execute(w, dataWithFlashMsgs)
 	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-	for _, tmpl := range templates {
-		if tmpl.IsDir() {
-			continue
-		}
-		pt, err := template.ParseFS(files, templatesDir+"/"+tmpl.Name(), layoutsDir+extension)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		pages[tmpl.Name()] = pt
+		log.Fatalf("template execution: %s", err)
 	}
 	return nil
 }
@@ -75,24 +77,4 @@ func ShowFlash(w http.ResponseWriter, r *http.Request) (string, error) {
 	http.SetCookie(w, &rc)
 	val, _ = base64.URLEncoding.DecodeString(c.Value)
 	return string(val), nil
-}
-
-// Execute the template based on the filename and data
-func ExecTemplate(w http.ResponseWriter, r *http.Request, data any, fileName string) error {
-
-	// TODO: mappare errore
-	flashMessages, _ := ShowFlash(w, r)
-
-	dataWithFlashMsgs := map[string]any{
-		"FlashMessages": flashMessages,
-		"Data":          data,
-	}
-	t, ok := pages[fileName]
-	if !ok {
-		return errors.New("template not found")
-	}
-	if err := t.Execute(w, dataWithFlashMsgs); err != nil {
-		return errors.New("error executing template")
-	}
-	return nil
 }

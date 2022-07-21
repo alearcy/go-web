@@ -1,4 +1,4 @@
-{{define "main"}}
+{{define "admin"}}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,7 +15,7 @@
 
 <body>
   <header>
-    <div class="logo"><a href="/">AACMS</a></div>
+    <div class="logo"><a href="/admin">AACMS</a></div>
     <nav>
       <a href="/admin">admin</a>
       <a href="/login">signin</a>
@@ -31,7 +31,7 @@
       </div>
     </div>
     {{end}}
-    {{template "content" .Data}}
+    {{template "adminContent" .Data}}
   </main>
   <script src="/static/js/main.js"></script>
 </body>

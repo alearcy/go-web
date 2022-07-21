@@ -111,7 +111,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := sf.Validate(); !ok {
-			utils.ExecTemplate(w, r, sf, "signup.gohtml")
+			utils.GenerateTemplate(w, r, sf, "signup")
 			return
 		}
 
@@ -140,7 +140,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signup", http.StatusFound)
 	}
 	if !IsLoggedIn(w, r) {
-		utils.ExecTemplate(w, r, nil, "signup.gohtml")
+		utils.GenerateTemplate(w, r, nil, "signup")
 		return
 	}
 	utils.Flash(w, "Risulti già loggato!")
@@ -161,7 +161,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := lf.Validate(); !ok {
-			utils.ExecTemplate(w, r, lf, "login.gohtml")
+			utils.GenerateTemplate(w, r, lf, "login")
 			return
 		}
 
@@ -193,7 +193,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/dashboard", http.StatusFound)
 			return
 		}
-		utils.ExecTemplate(w, r, nil, "login.gohtml")
+		utils.GenerateTemplate(w, r, nil, "login")
 		return
 	}
 }
@@ -209,7 +209,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/admin/login", http.StatusFound)
 }
 
 // Protected - a middleware to protect routes from unauthenticated users
@@ -218,7 +218,7 @@ func Protected(next http.HandlerFunc) http.HandlerFunc {
 		ok := IsLoggedIn(w, r)
 		if !ok {
 			utils.Flash(w, "Devi essere loggato.")
-			http.Redirect(w, r, "/login", http.StatusFound)
+			http.Redirect(w, r, "/admin/login", http.StatusFound)
 		}
 		next(w, r)
 	}

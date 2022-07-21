@@ -41,7 +41,7 @@ func GetSongs(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 		return
 	}
-	utils.ExecTemplate(w, r, songs, "songs.gohtml")
+	utils.GenerateTemplate(w, r, songs, "songs")
 }
 
 // GetUser get a single user from thd DB passing the known ID

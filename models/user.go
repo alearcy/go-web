@@ -39,7 +39,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
-		utils.ExecTemplate(w, r, us, "user.gohtml")
+		utils.GenerateTemplate(w, r, us, "user")
 	} else {
 
 		rows, err := database.Db.Query("SELECT id, name, surname, email, password, role FROM users")
@@ -65,7 +65,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, http.StatusText(500), http.StatusInternalServerError)
 			return
 		}
-		utils.ExecTemplate(w, r, urs, "users.gohtml")
+		utils.GenerateTemplate(w, r, urs, "users")
 	}
 
 }
