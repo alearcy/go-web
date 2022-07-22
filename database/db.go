@@ -31,18 +31,6 @@ CREATE TABLE IF NOT EXISTS users (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY(id)
-);
-
-CREATE TABLE IF NOT EXISTS songs (
-    id INTEGER,
-    title TEXT NOT NULL,
-    image TEXT NOT NULL,
-    filename TEXT NOT NULL,
-    userId INTEGER NOT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id),
-    FOREIGN KEY(userId) REFERENCES users(id)
 );`
 
 // StartDb - db initialization function
