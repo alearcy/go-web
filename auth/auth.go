@@ -27,6 +27,7 @@ func generateUUID() string {
 	return sIDs
 }
 
+// TODO: aggiungere da file env se è dev o prod e mettere o meno https
 // GenerateSession - genmerate a new session passing the ResponseWriter, the user and the remember option
 func GenerateSession(w http.ResponseWriter, user model.User, remember string) (bool, error) {
 	uuID := generateUUID()
@@ -36,7 +37,7 @@ func GenerateSession(w http.ResponseWriter, user model.User, remember string) (b
 		HttpOnly: true,
 		Path:     "/",
 		// solo HTTPS
-		// Secure: true TODO: aggiungere da file env se è dev o prod e mettere o meno https
+		// Secure: true
 	}
 	if remember == "remember" {
 		// scade dopo un anno, altrimenti a ogni nuova sessione
