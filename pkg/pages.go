@@ -3,7 +3,7 @@ package pages
 import (
 	"log/slog"
 	"net/http"
-	"web/utils"
+	"web/pkg/utils"
 )
 
 // Index is the main web page

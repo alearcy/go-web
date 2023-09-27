@@ -2,11 +2,12 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"web/auth"
-	"web/database"
-	model "web/models"
-	"web/pages"
+	"net/pkg/http"
+	"web/pkg/database"
+	model "web/pkg/models"
+	"web/pkg/pages"
+
+	"web/pkg/auth"
 )
 
 func init() {
