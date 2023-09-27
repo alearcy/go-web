@@ -11,10 +11,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700&display=swap" rel="stylesheet">
-  <title>Alessandro Arcidiaco</title>
+  <title>ChocoCRM</title>
 </head>
 
 <body>
+  <header>
+    <div class="logo"><a href="/admin">ChocoCRM</a></div>
+    <nav>
+      <a href="/admin">admin</a>
+      <a href="/login">signin</a>
+      <a href="/signup">signup</a>
+    </nav>
+  </header>
   <main class="container">
     {{template "content" .Data}}
   </main>

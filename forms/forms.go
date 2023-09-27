@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-var rxEmail = regexp.MustCompile(`.+@.+\\..+`)
+var rxEmail = regexp.MustCompile(`^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$`)
 
 // LoginForm create login form struct
 type LoginForm struct {

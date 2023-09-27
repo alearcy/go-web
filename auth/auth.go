@@ -12,6 +12,8 @@ import (
 
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
+
+	"log/slog"
 )
 
 type session struct {
@@ -112,7 +114,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := sf.Validate(); !ok {
-			utils.GenerateTemplate(w, r, sf, "signup")
+			url, err := utils.FormatURL(r)
+			if err != nil {
+				slog.Error(err.Error())
+				return
+			}
+			utils.GenerateTemplate(w, r, nil, url)
 			return
 		}
 
@@ -141,7 +148,12 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signup", http.StatusFound)
 	}
 	if !IsLoggedIn(w, r) {
-		utils.GenerateTemplate(w, r, nil, "signup")
+		url, err := utils.FormatURL(r)
+		if err != nil {
+			slog.Error(err.Error())
+			return
+		}
+		utils.GenerateTemplate(w, r, nil, url)
 		return
 	}
 	utils.Flash(w, "Risulti già loggato!")
@@ -162,7 +174,12 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := lf.Validate(); !ok {
-			utils.GenerateTemplate(w, r, lf, "login")
+			url, err := utils.FormatURL(r)
+			if err != nil {
+				slog.Error(err.Error())
+				return
+			}
+			utils.GenerateTemplate(w, r, nil, url)
 			return
 		}
 
@@ -186,15 +203,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if ok, _ := GenerateSession(w, u, remember); ok {
-			http.Redirect(w, r, "/dashboard", http.StatusFound)
+			http.Redirect(w, r, "/admin", http.StatusFound)
 		}
 	}
 	if r.Method == http.MethodGet {
 		if IsLoggedIn(w, r) {
-			http.Redirect(w, r, "/dashboard", http.StatusFound)
+			http.Redirect(w, r, "/admin", http.StatusFound)
 			return
 		}
-		utils.GenerateTemplate(w, r, nil, "login")
+		url, err := utils.FormatURL(r)
+		if err != nil {
+			slog.Error(err.Error())
+			return
+		}
+		utils.GenerateTemplate(w, r, nil, url)
 		return
 	}
 }
@@ -210,7 +232,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/admin/login", http.StatusFound)
+	http.Redirect(w, r, "/login", http.StatusFound)
 }
 
 // Protected - a middleware to protect routes from unauthenticated users
@@ -219,7 +241,7 @@ func Protected(next http.HandlerFunc) http.HandlerFunc {
 		ok := IsLoggedIn(w, r)
 		if !ok {
 			utils.Flash(w, "Devi essere loggato.")
-			http.Redirect(w, r, "/admin/login", http.StatusFound)
+			http.Redirect(w, r, "/login", http.StatusFound)
 		}
 		next(w, r)
 	}

@@ -2,9 +2,10 @@ package utils
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -17,32 +18,43 @@ const (
 	TemplatesFolder       = "templates"
 )
 
-// GenerateTemplate generate templates based on data and html
-func GenerateTemplate(w http.ResponseWriter, r *http.Request, data any, fileName string) error {
-	var layoutType string
+func FormatURL(r *http.Request) (string, error) {
+	split := strings.Split(r.URL.Path, string(os.PathSeparator))
+	fmt.Println(split)
+	if len(split) > 0 {
+		if split[0] == "/" {
+
+			return "/index", nil
+		}
+		return split[0], nil
+
+	}
+	return "", errors.New("URL non valido")
+}
+
+// GenerateTemplate generate HTML templates based on URL with data
+func GenerateTemplate(w http.ResponseWriter, r *http.Request, data any, fileName string) {
 	flashMessages, _ := ShowFlash(w, r)
-	dataWithFlashMsgs := map[string]interface{}{
+	dataWithFlashMsgs := map[string]any{
 		"FlashMessages": flashMessages,
 		"Data":          data,
 	}
-
-	split := strings.Split(r.URL.Path, string(os.PathSeparator))
-	level := split[1]
-	fmt.Println(level)
-	if level != "" {
-		layoutType = fmt.Sprintf("templates/%s/", level)
-	} else {
-		layoutType = "templates"
-	}
-	formatteLayoutdUrl := fmt.Sprintf("%s/base.gohtml", layoutType)
-	formatteTemmplateUrl := fmt.Sprintf("%s/%s.gohtml", layoutType, fileName)
-	templates := template.Must(template.ParseFiles(formatteTemmplateUrl, formatteLayoutdUrl))
-	fmt.Println(templates.Name())
-	err := templates.Execute(w, dataWithFlashMsgs)
+	urlWithoutLastSlash := strings.TrimSuffix(fileName, "/")
+	formatteLayoutUrl := "templates/base.gohtml"
+	formatteTemplateUrl := fmt.Sprintf("templates%s.gohtml", urlWithoutLastSlash)
+	parsedTemplate, err := template.ParseFiles(formatteTemplateUrl, formatteLayoutUrl)
 	if err != nil {
-		log.Fatalf("template execution: %s", err)
+		slog.Error(err.Error())
+		http.Redirect(w, r, "/404", http.StatusFound)
+		return
 	}
-	return nil
+	templates := template.Must(parsedTemplate, err)
+	err = templates.Execute(w, dataWithFlashMsgs)
+	if err != nil {
+		slog.Error(err.Error())
+		http.Redirect(w, r, "/404", http.StatusFound)
+		return
+	}
 }
 
 // Flash - create flash message passing ResponseWriter and a message
