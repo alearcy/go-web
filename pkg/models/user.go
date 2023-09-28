@@ -4,8 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"web/database"
-	"web/utils"
+	database "web/pkg/db"
+	"web/pkg/utils"
 )
 
 // User struct

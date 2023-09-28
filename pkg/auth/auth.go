@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-	"web/pkg/database"
+	database "web/pkg/db"
 	"web/pkg/forms"
 	model "web/pkg/models"
 	"web/pkg/utils"

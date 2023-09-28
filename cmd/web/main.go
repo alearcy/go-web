@@ -2,8 +2,8 @@ package main
 
 import (
 	"log"
-	"net/pkg/http"
-	"web/pkg/database"
+	"net/http"
+	database "web/pkg/db"
 	model "web/pkg/models"
 	"web/pkg/pages"
 
