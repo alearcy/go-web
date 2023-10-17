@@ -58,11 +58,11 @@ CREATE TABLE IF NOT EXISTS program (
 	created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,	
 	FOREIGN KEY (b1_id, b2_id, b3_id, b4_id) REFERENCES brothers
-)`
+);`
 
 // StartDb - db initialization function
 func StartDb() {
-	//viper.SetConfigFile(".env")
+	//viper.SetConfigFile("../../.env")
 	var err error
 	//err = viper.ReadInConfig()
 	//if err != nil {
