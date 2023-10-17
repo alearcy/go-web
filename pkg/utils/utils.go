@@ -40,7 +40,7 @@ func GenerateTemplate(w http.ResponseWriter, r *http.Request, data any, fileName
 		"Data":          data,
 	}
 	urlWithoutLastSlash := strings.TrimSuffix(fileName, "/")
-	formatteLayoutUrl := "templates/base.gohtml"
+	formatteLayoutUrl := fmt.Sprintf("%s/base.gohtml", TemplatesFolder)
 	formatteTemplateUrl := fmt.Sprintf("templates%s.gohtml", urlWithoutLastSlash)
 	parsedTemplate, err := template.ParseFiles(formatteTemplateUrl, formatteLayoutUrl)
 	if err != nil {
